@@ -1,0 +1,17 @@
+# Cobros + Tesis
+
+Especificación: `PROMPT_cobros_tesis.md`. Avance: `PROGRESO.md`. Decisiones: `DECISIONES.md`.
+
+@AGENTS.md
+
+## Comandos
+- `npm run dev` · `npm run build` · `npm run typecheck` · `npm run lint` · `npm run test` · `npm run e2e`
+- BD: `npm run db:setup` (una vez) · `npm run db:generate` · `npm run db:migrate` · `npm run db:seed` · `npm run db:reset` (solo dev)
+- Postgres local en el puerto 5433.
+
+## Reglas
+- Consultas de negocio SIEMPRE con `withOrg(orgId, tx => …)` (RLS). `withAdmin`/`dbAdmin` solo para auth, superadmin, jobs y tokens del portal.
+- `src/modules/cobros` nunca importa de `src/modules/tesis` (ESLint lo impide). `core`/`lib` no importan módulos.
+- Tablas/columnas en español snake_case. Dinero en centavos (`integer`). Fechas de negocio como `date` (texto YYYY-MM-DD) en America/La_Paz.
+- Nueva tabla con `organizacion_id` → nueva migración custom con `SELECT aplicar_rls();`.
+- Entradas validadas con Zod en el servidor.
