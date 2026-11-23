@@ -39,3 +39,30 @@ Cuando el prompt no fue explícito se eligió la opción más simple y segura. A
 - **Organización suspendida**: sus usuarios no pasan `requerirOrganizacion` (se los manda al login).
 - **Pruebas sobre la misma base**: Vitest y Playwright usan `cobra_app`; los tests crean organizaciones temporales con
   slug `test-*` y las borran al final. Los E2E crean datos con sufijos aleatorios.
+
+## Fase 1 — Cobros: clientes, planes, pagos y portal
+
+- **Dinero en centavos** (`integer`) y fechas de negocio como `date` (`YYYY-MM-DD`) calculadas en la zona de la
+  organización (`America/La_Paz`). Formato en pantalla `Bs 1.250,00` / `R$ 1.250,00`.
+- **Cuotas editables siempre**: montos y fechas (pasadas o futuras) de cuotas pendientes; las fechas también de las
+  pagadas. Una cuota **pagada** no cambia de monto ni se puede quitar; una con comprobante en revisión no se puede
+  quitar. Cada cambio queda en `historial_plan` (quién, cuándo, campo, antes → después).
+- **Plan aceptado**: un plan creado en Cobros nace aceptado (el negocio lo crea cuando el cliente ya aceptó). Los
+  planes creados desde Tesis nacen sin aceptar hasta que el estudiante acepta en su enlace.
+- **Enlace del portal**: token de 32 bytes aleatorios (base64url, 43 caracteres). Se guarda en claro con índice único
+  porque el negocio debe poder reenviarlo por WhatsApp; el acceso exige además CI o PIN. Anular = el token pasa a
+  `NULL` (deja de existir). Generar un enlace nuevo anula los anteriores del plan.
+- **CI o PIN**: el negocio elige. CI se compara normalizado (sin espacios/puntos/guiones, mayúsculas). El PIN (6
+  dígitos) se guarda como HMAC-SHA256 con `BETTER_AUTH_SECRET` y se muestra **una sola vez** al generarlo.
+- **Bloqueo**: 5 intentos fallidos seguidos → 15 min bloqueado, por enlace, guardado en la BD (sobrevive reinicios).
+- **Sesión del portal**: cookie httpOnly firmada (HMAC) por enlace, válida 2 h.
+- **Pago**: una cuota completa por comprobante (monto + recargos). Se guarda el monto en Bs, el tipo de cambio y su
+  fecha **el día que el cliente sube el comprobante**. Mientras el comprobante está en revisión la cuota no escala
+  en mora ni acumula recargos (se evalúa como "en revisión").
+- **Archivos**: `UPLOAD_DIR/{organizacion_id}/{categoria}/{uuid}.{ext}`; nunca se sirven como estáticos. La ruta
+  `/api/archivos/[id]` exige sesión del panel de la misma organización (consulta con RLS) o sesión de portal del plan
+  dueño del archivo; responde 404 en cualquier otro caso. El QR se sirve por `/p/[token]/qr` solo con sesión de portal.
+  Validación por extensión **y** magic bytes (PDF, PNG/JPG/WEBP, DOC/XLS OLE, DOCX/XLSX/ZIP).
+- **Límite de subida**: Next acepta hasta 52 MB por petición (`serverActions.bodySizeLimit` y
+  `proxyClientMaxBodySize`) para dejar margen al multipart; el servidor aplica el límite exacto de 50 MB por archivo.
+- **Plantillas de WhatsApp y botón**: se adelantaron a esta fase porque la ficha del plan las usa (ver Fase 2).

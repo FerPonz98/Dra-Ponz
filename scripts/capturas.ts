@@ -8,7 +8,21 @@ const fase = process.argv[2] ?? "0";
 
 type Pagina = { nombre: string; ruta: string | (() => Promise<string>); quien?: "superadmin" | "dra" | "demo" | null };
 
-const extra: Record<string, string> = JSON.parse(process.env.CAPTURAS_EXTRA ?? "{}");
+const extra: Record<string, string> = {};
+
+async function cargarExtras() {
+  const { Client } = await import("pg");
+  const c = new Client({ connectionString: process.env.DATABASE_ADMIN_URL });
+  await c.connect();
+  const uno = async (q: string) => (await c.query(q).catch(() => ({ rows: [] as Record<string, string>[] }))).rows[0] as Record<string, string> | undefined;
+  const plan = await uno("select p.id from planes_pago p join organizaciones o on o.id=p.organizacion_id where o.slug='dra-ponz' order by p.creado_en desc limit 1");
+  if (plan) extra.plan = `/panel/cobros/planes/${plan.id}`;
+  const enlace = await uno("select token from enlaces_portal where token is not null order by creado_en desc limit 1");
+  if (enlace) extra.portal = `/p/${enlace.token}`;
+  const prop = await uno("select id from propuestas order by creado_en desc limit 1");
+  if (prop) extra.propuesta = `/panel/tesis/propuestas/${prop.id}`;
+  await c.end();
+}
 
 const PAGINAS: Record<string, Pagina[]> = {
   "0": [
@@ -19,9 +33,9 @@ const PAGINAS: Record<string, Pagina[]> = {
   "1": [
     { nombre: "clientes", ruta: "/panel/cobros/clientes", quien: "dra" },
     { nombre: "planes", ruta: "/panel/cobros/planes", quien: "dra" },
-    { nombre: "plan-detalle", ruta: extra.plan ?? "/panel/cobros/planes", quien: "dra" },
+    { nombre: "plan-detalle", ruta: async () => extra.plan ?? "/panel/cobros/planes", quien: "dra" },
     { nombre: "comprobantes", ruta: "/panel/cobros/pagos", quien: "dra" },
-    { nombre: "portal-acceso", ruta: extra.portal ?? "/login", quien: null },
+    { nombre: "portal-acceso", ruta: async () => extra.portal ?? "/login", quien: null },
   ],
   "2": [
     { nombre: "resumen", ruta: "/panel", quien: "dra" },
@@ -31,12 +45,12 @@ const PAGINAS: Record<string, Pagina[]> = {
   "3": [
     { nombre: "propuestas", ruta: "/panel/tesis/propuestas", quien: "dra" },
     { nombre: "propuesta-nueva", ruta: "/panel/tesis/propuestas/nueva", quien: "dra" },
-    { nombre: "propuesta-ficha", ruta: extra.propuesta ?? "/panel/tesis/propuestas", quien: "dra" },
+    { nombre: "propuesta-ficha", ruta: async () => extra.propuesta ?? "/panel/tesis/propuestas", quien: "dra" },
   ],
   "4": [
     { nombre: "formularios", ruta: "/panel/tesis/formularios", quien: "dra" },
     { nombre: "calendario", ruta: "/panel/tesis/calendario", quien: "dra" },
-    { nombre: "portal-estudiante", ruta: extra.portal ?? "/login", quien: null },
+    { nombre: "portal-estudiante", ruta: async () => extra.portal ?? "/login", quien: null },
   ],
   "5": [
     { nombre: "landing-es", ruta: "/es", quien: null },
@@ -60,6 +74,7 @@ async function login(page: Page, quien: keyof typeof cred) {
 }
 
 async function main() {
+  await cargarExtras();
   const dir = `revisiones/fase-${fase}`;
   mkdirSync(dir, { recursive: true });
   const nav = await chromium.launch();

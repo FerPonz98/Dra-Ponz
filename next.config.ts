@@ -13,7 +13,9 @@ const nextConfig: NextConfig = {
   },
   serverExternalPackages: ["@react-pdf/renderer", "pg"],
   experimental: {
-    serverActions: { bodySizeLimit: "2mb" },
+    // 50 MB por archivo + margen del multipart (el servidor valida el límite exacto de 50 MB).
+    serverActions: { bodySizeLimit: "52mb" },
+    proxyClientMaxBodySize: "52mb",
     authInterrupts: true,
   },
   async headers() {

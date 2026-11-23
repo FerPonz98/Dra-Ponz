@@ -26,7 +26,7 @@ export async function enviarCorreo(c: Correo): Promise<{ via: "resend" | "smtp" 
     await t.sendMail({ from: remitente, to: c.para, subject: c.asunto, html: c.html, text: c.texto });
     return { via: "smtp" };
   }
-  const dir = join(process.cwd(), ".data", "correos");
+  const dir = join(/*turbopackIgnore: true*/ process.cwd(), ".data", "correos");
   await mkdir(dir, { recursive: true });
   const nombre = `${Date.now()}-${c.para.replace(/[^a-z0-9@.]/gi, "_")}.json`;
   await writeFile(join(dir, nombre), JSON.stringify({ ...c, fecha: new Date().toISOString() }, null, 2));

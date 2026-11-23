@@ -7,6 +7,7 @@ import { auth } from "@/core/auth/auth";
 import { organizacionModulos, organizaciones, roles, usuarios, type CodigoModulo } from "@/core/db/schema";
 import { permisosEfectivos, type Permiso } from "@/core/permisos";
 import { dbAdmin } from "@/lib/db";
+import { hoyEnZona } from "@/lib/fechas";
 
 export type Organizacion = typeof organizaciones.$inferSelect;
 
@@ -76,4 +77,14 @@ export async function requerirSuperadmin(): Promise<Contexto> {
   const ctx = await requerirSesion();
   if (!ctx.usuario.esSuperadmin) forbidden();
   return ctx;
+}
+
+/** Datos del usuario que actúa (para historial y auditoría). */
+export function actorDe(ctx: ContextoOrg) {
+  return { organizacionId: ctx.organizacion.id, usuarioId: ctx.usuario.id, usuarioNombre: ctx.usuario.nombre };
+}
+
+/** Fecha de hoy en la zona horaria de la organización (YYYY-MM-DD). */
+export function hoyDe(ctx: ContextoOrg, ahora = new Date()) {
+  return hoyEnZona(ctx.organizacion.zonaHoraria, ahora);
 }
