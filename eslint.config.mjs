@@ -39,6 +39,11 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  // PM2 exige CommonJS en ecosystem.config.js
+  {
+    files: ["ecosystem.config.js"],
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "drizzle/**", "test-results/**", "playwright-report/**", "lighthouse/**"]),
 ]);
 

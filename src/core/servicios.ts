@@ -1,7 +1,7 @@
 import { and, count, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { hashPassword } from "better-auth/crypto";
-import { archivos, auditoria, cuentas, MODULOS, organizacionModulos, organizaciones, roles, usuarios, type CodigoModulo } from "@/core/db/schema";
+import { archivos, auditoria, cuentas, MODULOS, organizacionModulos, organizaciones, roles, sesiones, usuarios, type CodigoModulo } from "@/core/db/schema";
 import { TODOS_LOS_PERMISOS } from "@/core/permisos";
 import { dbAdmin, withAdmin, type Ejecutor } from "@/lib/db";
 
@@ -122,4 +122,50 @@ export async function usuariosDeOrganizacion(organizacionId: string) {
       .leftJoin(roles, eq(roles.id, usuarios.rolId))
       .where(and(eq(usuarios.organizacionId, organizacionId), eq(usuarios.esSuperadmin, false))),
   );
+}
+
+// ───────────── Usuarios y roles de una organización (admin de la organización) ─────────────
+export const esquemaRol = z.object({
+  nombre: z.string().trim().min(2, "Nombre de rol muy corto").max(60),
+  permisos: z.array(z.enum(TODOS_LOS_PERMISOS as [string, ...string[]])).max(50),
+});
+
+export async function listarRoles(tx: Ejecutor) {
+  return tx.select().from(roles).orderBy(roles.nombre);
+}
+
+export async function guardarRol(tx: Ejecutor, organizacionId: string, entrada: z.input<typeof esquemaRol>, id?: string) {
+  const d = esquemaRol.parse(entrada);
+  if (id) {
+    const [r] = await tx.select().from(roles).where(eq(roles.id, id));
+    if (!r) throw new Error("Rol no encontrado");
+    if (r.esAdmin) throw new Error("El rol Administrador siempre tiene todos los permisos.");
+    await tx.update(roles).set({ nombre: d.nombre, permisos: d.permisos }).where(eq(roles.id, id));
+    return id;
+  }
+  const [r] = await tx.insert(roles).values({ organizacionId, nombre: d.nombre, permisos: d.permisos }).returning();
+  return r.id;
+}
+
+export const esquemaNuevoUsuario = z.object({
+  nombre: z.string().trim().min(2).max(120),
+  correo: z.email("Correo inválido").trim().toLowerCase(),
+  contrasena: z.string().min(8, "Mínimo 8 caracteres").max(128),
+  rolId: z.uuid("Elige un rol"),
+});
+
+/** El admin crea un usuario de su organización (el rol debe ser de la misma organización: se verifica con RLS). */
+export async function crearUsuarioDeOrganizacion(organizacionId: string, entrada: z.input<typeof esquemaNuevoUsuario>, verificarRol: (rolId: string) => Promise<boolean>) {
+  const d = esquemaNuevoUsuario.parse(entrada);
+  if (!(await verificarRol(d.rolId))) throw new Error("Rol no válido");
+  return withAdmin((tx) => crearUsuario(tx, { nombre: d.nombre, correo: d.correo, contrasena: d.contrasena, organizacionId, rolId: d.rolId }));
+}
+
+export async function actualizarUsuarioDeOrganizacion(organizacionId: string, usuarioId: string, cambios: { rolId?: string; activo?: boolean }) {
+  await withAdmin(async (tx) => {
+    const [u] = await tx.select().from(usuarios).where(and(eq(usuarios.id, usuarioId), eq(usuarios.organizacionId, organizacionId)));
+    if (!u) throw new Error("Usuario no encontrado");
+    await tx.update(usuarios).set({ ...cambios, updatedAt: new Date() }).where(eq(usuarios.id, usuarioId));
+    if (cambios.activo === false) await tx.delete(sesiones).where(eq(sesiones.userId, usuarioId));
+  });
 }

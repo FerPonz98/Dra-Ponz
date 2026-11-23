@@ -167,3 +167,22 @@ Cuando el prompt no fue explícito se eligió la opción más simple y segura. A
 - **SEO**: título y descripción editables, canonical, `hreflang` es/pt/x-default, Open Graph y Twitter, imagen OG
   generada, `sitemap.xml` con alternos, `robots.txt` (bloquea panel, portal, api y login), JSON-LD `ProfessionalService`.
 - **Lighthouse**: `npm run lighthouse` usa el CLI (el API dentro de `tsx` falla por `__name`) con el Chromium de Playwright.
+
+## Fase 6 — Producción
+
+- **PM2 corre el servidor standalone** (`.next/standalone/server.js`), una sola instancia (el rate limit del login es en
+  memoria). `ecosystem.config.js` lee `.env` sin dependencias. `deploy.sh` hace lo que pide el prompt y además copia
+  `public/` y `.next/static` junto a `server.js` (el standalone no los incluye) y hace `pm2 save`.
+- **Se probó el standalone**: toda la suite E2E corre también contra él (`E2E_SERVIDOR=standalone npm run e2e`).
+  Como standalone hace `chdir` a su carpeta, **`UPLOAD_DIR` debe ser absoluta** en producción. Un archivo que falte en
+  disco responde 404 (no 500).
+- **Nginx `client_max_body_size 55M`** (el prompt pedía 50M): con 50M exactos, un archivo de 50 MB justos se rechaza
+  porque la petición multipart pesa un poco más. El límite real de 50 MB por archivo lo valida la app (y Next acepta
+  hasta 52 MB por petición). Si se prefiere 50M literal, cambiar esa línea: solo afecta a archivos al borde del límite.
+- **Crons** con `curl` a los endpoints protegidos por `CRON_SECRET` (no hace falta `tsx` en producción). El servidor
+  queda en `America/La_Paz` (`setup-vps.sh`) para que las horas del crontab sean las locales.
+- **Backups**: `pg_dump` formato custom con el rol dueño + tar de `UPLOAD_DIR`, rotación local y remota de 14 días,
+  copia fuera del VPS con `rclone` (`RCLONE_REMOTE`); si está vacío, avisa en el log.
+- **Usuarios y roles** (núcleo, se completó en esta fase): el admin de la organización crea roles con permisos por
+  módulo y usuarios con contraseña inicial; puede cambiar el rol o desactivar (cierra sus sesiones). No puede
+  desactivarse a sí mismo. Los roles se validan con RLS (solo los de su organización).

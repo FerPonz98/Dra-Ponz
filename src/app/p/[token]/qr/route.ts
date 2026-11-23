@@ -11,6 +11,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ token: string 
   if (!s.resuelto || !s.autorizado || !s.resuelto.organizacion.qrArchivoId) return new Response("No disponible", { status: 404 });
   const [a] = await dbAdmin().select().from(archivos).where(eq(archivos.id, s.resuelto.organizacion.qrArchivoId));
   if (!a) return new Response("No disponible", { status: 404 });
-  const datos = await leerArchivo(a.rutaRelativa);
+  const datos = await leerArchivo(a.rutaRelativa).catch(() => null);
+  if (!datos) return new Response("No disponible", { status: 404 });
   return new Response(new Uint8Array(datos), { headers: { "Content-Type": a.tipoMime, "Cache-Control": "private, max-age=300", "X-Content-Type-Options": "nosniff" } });
 }

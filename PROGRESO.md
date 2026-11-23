@@ -8,7 +8,8 @@
 - [ ] Número de WhatsApp real de la Dra. (`WHATSAPP_LANDING` y Panel → Organización); hoy es `59100000000`.
 - [ ] Dominio `julietaponz.com` apuntando al VPS (DNS A/AAAA).
 - [ ] Clave de Resend (`RESEND_API_KEY`) o datos SMTP; sin ellos los correos quedan en `./.data/correos`.
-- [ ] Acceso al VPS (IP, usuario SSH) para el despliegue.
+- [ ] Acceso al VPS (IP, usuario SSH) para el despliegue, y un remoto de rclone (Backblaze B2, Google Drive, etc.)
+      para la copia de backups fuera del VPS (`RCLONE_REMOTE`).
 - [ ] Cambiar las contraseñas del seed (`SUPERADMIN_PASSWORD`, `DRA_PASSWORD`, `DEMO_PASSWORD`) en producción.
 
 ## Fase 0 — Setup y núcleo ✅
@@ -144,3 +145,35 @@
 | **Lighthouse (móvil)** | ✅ `/es`: rendimiento **99**, accesibilidad **100**, buenas prácticas **100**, SEO **100** · `/pt`: **96 / 100 / 100 / 100** (informes en `lighthouse/`) |
 | Revisión manual | ✅ `revisiones/fase-5/` (el CTA fijo aparece en medio de la captura de página completa por cómo se toman; en pantalla queda abajo) |
 | Seguridad | ✅ la landing no expone datos privados; el botón de WhatsApp de la landing es el contacto público de la Dra. (los botones de recordatorio siguen solo en el panel) |
+
+## Fase 6 — Producción ✅
+
+**Hecho**
+- `scripts/deploy.sh`, `ecosystem.config.js` (PM2), `scripts/nginx/julietaponz.com.conf` (julietaponz.com + www, proxy a
+  Next, Certbot), `scripts/backup.sh` (pg_dump + tar, 14 días, rclone), `scripts/crontab.txt`, `scripts/setup-vps.sh`
+  (Postgres solo en localhost, ufw 22/80/443, zona horaria, PM2 al arranque), `.env.example` completo, `README.md`.
+- Núcleo completado: página **Usuarios y roles** (roles con permisos por módulo, alta de usuarios, cambiar rol, activar/desactivar).
+
+**Checklist de la sección 9**
+| Ítem | Estado |
+|---|---|
+| `deploy.sh`: git pull, npm ci, db:migrate, build, pm2 reload | ✅ (+ copia de estáticos del standalone y `pm2 save`) |
+| `ecosystem.config.js` (PM2) | ✅ verificado que carga y apunta a `server.js` |
+| Nginx julietaponz.com + www, `client_max_body_size`, proxy a Next, Certbot | ✅ (55M, ver DECISIONES) |
+| `backup.sh`: pg_dump + tar de UPLOAD_DIR, rotación 14 días, rclone configurable | ✅ (sintaxis verificada con `bash -n`) |
+| Crons: mora/recordatorios 07:00, tipo de cambio 08:00, backup 02:00 (America/La_Paz) | ✅ `scripts/crontab.txt` |
+| Postgres solo en localhost, ufw 22/80/443 | ✅ `scripts/setup-vps.sh` |
+| `.env.example` con todas las variables | ✅ |
+| Sin Docker | ✅ |
+
+**Revisión final (sección 8)**
+| Paso | Resultado |
+|---|---|
+| typecheck | ✅ 0 errores |
+| lint | ✅ 0 errores, 0 avisos (se comprobó que la regla cobros ⇏ tesis falla con una importación prohibida) |
+| build | ✅ sin avisos |
+| test (Vitest) | ✅ 9 archivos, **54/54** |
+| e2e (Playwright) | ✅ **21/21** con `next start` y **21/21** con el servidor standalone de PM2 (2 omitidos por proyecto a propósito) |
+| Lighthouse móvil | ✅ `/es` 98/100/100/100 · `/pt` 98/100/100/100 (rendimiento/accesibilidad/buenas prácticas/SEO) |
+| Revisión manual | ✅ `revisiones/fase-0` … `fase-6` (escritorio y 375 px) |
+| Seguridad | ✅ archivos solo con sesión (panel con RLS o portal del mismo plan), tokens de 256 bits, WhatsApp de recordatorios solo con sesión, Zod en todas las acciones, `.env` fuera del repo (verificado también en el historial), `CRON_SECRET` en tiempo constante, rol de la app sin BYPASSRLS |

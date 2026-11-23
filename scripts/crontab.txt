@@ -1,0 +1,14 @@
+# Instalar con:  crontab scripts/crontab.txt   (usuario que corre PM2; ajustar APP)
+# Las horas son de America/La_Paz: setup-vps.sh deja el servidor en esa zona (timedatectl).
+# Si el servidor quedara en UTC, sumar 4 horas (La Paz = UTC-4, sin horario de verano).
+SHELL=/bin/bash
+APP=/var/www/cobros
+
+# Mora, recargos, correos de recordatorio y estados de Tesis — todos los días 07:00
+0 7 * * * cd $APP && curl -fsS -X POST -H "Authorization: Bearer $(grep '^CRON_SECRET=' .env | cut -d= -f2-)" http://127.0.0.1:3000/api/jobs/diario >> $APP/logs/job-diario.log 2>&1
+
+# Tipo de cambio BRL→BOB del BCB — todos los días 08:00
+0 8 * * * cd $APP && curl -sS -X POST -H "Authorization: Bearer $(grep '^CRON_SECRET=' .env | cut -d= -f2-)" http://127.0.0.1:3000/api/jobs/tipo-cambio >> $APP/logs/tipo-cambio.log 2>&1
+
+# Backup (pg_dump + archivos, rotación 14 días, rclone) — todos los días 02:00
+0 2 * * * cd $APP && ./scripts/backup.sh >> $APP/logs/backup.log 2>&1

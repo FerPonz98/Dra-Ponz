@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { defineConfig, devices } from "@playwright/test";
 
 const PUERTO = Number(process.env.E2E_PORT ?? 3100);
@@ -18,10 +19,11 @@ export default defineConfig({
     { name: "celular", use: { ...devices["Pixel 7"], viewport: { width: 375, height: 800 } }, grep: /@movil/ },
   ],
   webServer: {
-    command: `npm run start -- -p ${PUERTO}`,
+    // E2E_SERVIDOR=standalone prueba el mismo servidor que corre PM2 en producción.
+    command: process.env.E2E_SERVIDOR === "standalone" ? "node .next/standalone/server.js" : `npm run start -- -p ${PUERTO}`,
     url: `${URL_BASE}/login`,
     reuseExistingServer: false,
     timeout: 120_000,
-    env: { BETTER_AUTH_URL: URL_BASE, APP_URL: URL_BASE, NODE_ENV: "production", LOGIN_MAX_POR_MINUTO: "1000" },
+    env: { BETTER_AUTH_URL: URL_BASE, APP_URL: URL_BASE, NODE_ENV: "production", LOGIN_MAX_POR_MINUTO: "1000", PORT: String(PUERTO), HOSTNAME: "localhost" },
   },
 });

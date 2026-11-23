@@ -57,6 +57,12 @@ const PAGINAS: Record<string, Pagina[]> = {
     { nombre: "landing-pt", ruta: "/pt", quien: null },
     { nombre: "editor-landing", ruta: "/panel/tesis/landing", quien: "dra" },
   ],
+  "6": [
+    { nombre: "usuarios-roles", ruta: "/panel/usuarios", quien: "dra" },
+    { nombre: "organizacion", ruta: "/panel/configuracion", quien: "dra" },
+    { nombre: "superadmin", ruta: "/superadmin", quien: "superadmin" },
+    { nombre: "demo-dentista", ruta: "/panel", quien: "demo" },
+  ],
 };
 
 const cred = {
