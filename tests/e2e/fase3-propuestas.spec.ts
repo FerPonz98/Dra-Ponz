@@ -51,14 +51,15 @@ test.describe("Fase 3 · propuestas de tesis", () => {
     await estudiante.getByRole("button", { name: "Entrar" }).click();
     await expect(estudiante.getByRole("heading", { name: "1. Revisa tu propuesta" })).toBeVisible();
     await expect(estudiante.getByText("Bs 3.500,00").first()).toBeVisible();
-    estudiante.on("dialog", (d) => d.accept());
     await estudiante.getByRole("button", { name: "Acepto la propuesta" }).click();
+    await estudiante.getByRole("alertdialog").getByRole("button", { name: "Sí, acepto" }).click();
     await expect(estudiante.getByTestId("aceptada-portal")).toBeVisible();
     await expect(estudiante.getByText("2. Paga la primera cuota con QR")).toBeVisible();
     await expect(estudiante.getByTestId("boton-whatsapp")).toHaveCount(0);
 
     await page.reload();
     await expect(page.getByTestId("aceptada-en")).toBeVisible();
+    await page.getByRole("tab", { name: "Historial" }).click();
     await expect(page.getByTestId("historial-propuesta")).toContainText("Propuesta aceptada por el estudiante");
     await expect(page.getByTestId("historial-propuesta")).toContainText("Propuesta vencida");
     await expect(page.getByTestId("historial-propuesta")).toContainText("reenviada");

@@ -3,6 +3,7 @@ import { requerirPermiso } from "@/core/contexto";
 import { CATALOGO_PERMISOS } from "@/core/permisos";
 import { listarRoles, usuariosDeOrganizacion } from "@/core/servicios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EncabezadoPagina } from "@/components/ui/varios";
 import { withOrg } from "@/lib/db";
 import { EditorRoles, NuevoUsuario, TablaUsuarios } from "./cliente";
 
@@ -14,8 +15,8 @@ export default async function UsuariosPage() {
   const permisos = CATALOGO_PERMISOS.filter((p) => p.modulo === null || ctx.modulos.includes(p.modulo)).map((p) => ({ codigo: p.codigo, etiqueta: p.etiqueta }));
   const rolesSimple = rolesOrg.map((r) => ({ id: r.id, nombre: r.nombre, permisos: r.permisos, esAdmin: r.esAdmin }));
   return (
-    <div className="mx-auto max-w-4xl space-y-4">
-      <h1 className="text-2xl font-semibold">Usuarios y roles</h1>
+    <div className="mx-auto max-w-5xl space-y-6">
+      <EncabezadoPagina titulo="Usuarios y roles" descripcion="Quién entra al panel y qué puede hacer en cada módulo." />
       <Card>
         <CardHeader>
           <CardTitle>Usuarios</CardTitle>

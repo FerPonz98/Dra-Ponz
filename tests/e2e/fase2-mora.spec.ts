@@ -17,6 +17,7 @@ test.describe("Fase 2 · mora, recordatorios, plantillas y jobs", () => {
     const id = unico();
     await iniciarSesion(page, "dra");
     await page.goto("/panel/cobros/clientes");
+    await page.getByRole("button", { name: "Nuevo cliente" }).first().click();
     await page.getByLabel("Nombre completo").fill(`Moroso ${id}`);
     await page.getByLabel("Celular WhatsApp (con código de país)").fill("59170000001");
     await page.getByRole("button", { name: "Agregar cliente" }).click();
@@ -35,7 +36,7 @@ test.describe("Fase 2 · mora, recordatorios, plantillas y jobs", () => {
     await expect(page.getByText("Bs 10,00").first()).toBeVisible(); // recargo único del 10 %
 
     await page.goto("/panel/cobros/recordatorios");
-    const fila = page.getByTestId("grupo-en_cola").locator("div", { hasText: `Moroso ${id}` }).last();
+    const fila = page.getByTestId("grupo-en_cola").locator("li", { hasText: `Moroso ${id}` });
     const wa = fila.getByTestId("boton-whatsapp");
     await expect(wa).toBeVisible();
     const href = await wa.getAttribute("href");

@@ -11,9 +11,9 @@ export const COLOR_SITUACION: Record<SituacionCobro | "actividad" | "actividad_h
   por_vencer: "#b45309",
   en_gracia: "#c2410c",
   en_cola: "#b91c1c",
-  pagada: "#64748b",
-  actividad: "#7c2d5b",
-  actividad_hecha: "#a78bfa",
+  pagada: "#78716c",
+  actividad: "#4338ca",
+  actividad_hecha: "#818cf8",
 };
 export const ETIQUETA_SITUACION: Record<SituacionCobro, string> = {
   al_dia: "Al día",
@@ -31,7 +31,7 @@ export function situacionCuota(c: { estado: string; fechaVencimiento: string }, 
   return estadoMora === "en_cola" ? "en_cola" : "al_dia";
 }
 
-export type EventoCalendario = { id: string; title: string; start: string; end?: string; allDay: true; color: string; url: string; extendedProps: { tipo: "actividad" | "cobro"; situacion?: SituacionCobro } };
+export type EventoCalendario = { id: string; title: string; start: string; end?: string; allDay: true; color: string; url: string; extendedProps: { tipo: "actividad" | "cobro"; situacion?: SituacionCobro; color: string } };
 
 /** Eventos del calendario: actividades de los cronogramas vigentes y cuotas de los proyectos de tesis. */
 export async function eventosCalendario(tx: Ejecutor, hoy: string): Promise<EventoCalendario[]> {
@@ -62,7 +62,7 @@ export async function eventosCalendario(tx: Ejecutor, hoy: string): Promise<Even
             allDay: true,
             color: a.hecha ? COLOR_SITUACION.actividad_hecha : COLOR_SITUACION.actividad,
             url,
-            extendedProps: { tipo: "actividad" },
+            extendedProps: { tipo: "actividad", color: a.hecha ? COLOR_SITUACION.actividad_hecha : COLOR_SITUACION.actividad },
           });
         }
       }
@@ -76,7 +76,7 @@ export async function eventosCalendario(tx: Ejecutor, hoy: string): Promise<Even
         allDay: true,
         color: COLOR_SITUACION[s],
         url,
-        extendedProps: { tipo: "cobro", situacion: s },
+        extendedProps: { tipo: "cobro", situacion: s, color: COLOR_SITUACION[s] },
       });
     }
   }

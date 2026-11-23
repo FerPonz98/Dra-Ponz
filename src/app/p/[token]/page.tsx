@@ -1,47 +1,78 @@
+import { LinkIcon, Lock } from "lucide-react";
 import type { Metadata } from "next";
 import { withOrg } from "@/lib/db";
 import { hoyEnZona } from "@/lib/fechas";
 import { PortalCobros } from "@/modules/cobros/componentes/portal-cobros";
 import { datosPortal } from "@/modules/cobros/servicios/portal";
-import { sesionPortal } from "../sesion";
-import { AccesoPortal } from "./acceso-portal";
-import { accionSubirComprobante } from "./acciones";
-import { accionAceptarCronograma, accionAceptarPropuesta } from "./acciones-tesis";
-import { extrasPortalTesis } from "./extras-tesis";
 import { PortalTesis } from "@/modules/tesis/componentes/portal-tesis";
 import { obtenerProyecto, REFERENCIA_PROPUESTA, sincronizarProyecto } from "@/modules/tesis/servicios/propuestas";
+import { sesionPortal } from "../sesion";
+import { AccesoPortal } from "./acceso-portal";
+import { accionAceptarCronograma, accionAceptarPropuesta } from "./acciones-tesis";
+import { extrasPortalTesis } from "./extras-tesis";
 
 export const metadata: Metadata = { title: "Mi portal", robots: { index: false, follow: false }, referrer: "no-referrer" };
+
+function Encabezado({ nombre, color, logo }: { nombre: string; color: string; logo: string | null }) {
+  return (
+    <header className="sticky top-0 z-20 border-b border-border bg-surface/90 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-xl items-center gap-3 px-4">
+        {logo ? (
+          // eslint-disable-next-line @next/next/no-img-element -- logo privado de la organización
+          <img src={logo} alt="" className="size-9 rounded-xl border border-border bg-white object-contain" />
+        ) : (
+          <span className="flex size-9 items-center justify-center rounded-xl text-sm font-bold text-white shadow-sm" style={{ background: color }} aria-hidden>
+            {nombre.replace(/^Dra?\.\s*/i, "").trim()[0]?.toUpperCase()}
+          </span>
+        )}
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold leading-tight">{nombre}</p>
+          <p className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Lock className="size-3" aria-hidden /> Portal privado
+          </p>
+        </div>
+      </div>
+    </header>
+  );
+}
 
 export default async function PortalPage(props: { params: Promise<{ token: string }> }) {
   const { token } = await props.params;
   const { resuelto, autorizado } = await sesionPortal(token);
 
-  return (
-    <main className="mx-auto w-full max-w-xl flex-1 px-4 py-6" style={resuelto ? { ["--primary" as string]: resuelto.organizacion.colorPrimario } : undefined}>
-      {!resuelto ? (
-        <div className="py-16 text-center">
-          <h1 className="text-xl font-semibold">Enlace no disponible</h1>
-          <p className="mt-2 text-muted-foreground">El enlace venció o fue anulado. Pide uno nuevo a quien te lo envió.</p>
+  if (!resuelto) {
+    return (
+      <main className="flex flex-1 items-center justify-center bg-background px-4 py-16">
+        <div className="max-w-sm text-center">
+          <span className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+            <LinkIcon className="size-6" aria-hidden />
+          </span>
+          <h1 className="text-xl font-semibold tracking-tight">Enlace no disponible</h1>
+          <p className="mt-2 text-muted-foreground">Este enlace venció o fue reemplazado. Pide uno nuevo a quien te lo envió y con gusto te lo reenvía.</p>
         </div>
-      ) : !autorizado ? (
-        <AccesoPortal token={token} metodo={resuelto.enlace.metodo} organizacion={resuelto.organizacion.nombre} />
-      ) : (
-        <Contenido token={token} organizacionId={resuelto.organizacion.id} zona={resuelto.organizacion.zonaHoraria} planId={resuelto.enlace.planId}
-          qr={!!resuelto.organizacion.qrArchivoId}
-          banco={resuelto.organizacion.datosBancarios}
-          referenciaTipo={resuelto.enlace.referenciaTipo}
-          referenciaId={resuelto.enlace.referenciaId}
-        />
-      )}
-    </main>
+      </main>
+    );
+  }
+  const org = resuelto.organizacion;
+  return (
+    <div className="flex min-h-screen flex-1 flex-col bg-background">
+      <Encabezado nombre={org.nombre} color={org.colorPrimario} logo={org.logoArchivoId ? `/p/${token}/logo` : null} />
+      <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-16 pt-6">
+        {!autorizado ? (
+          <AccesoPortal token={token} metodo={resuelto.enlace.metodo} organizacion={org.nombre} />
+        ) : (
+          <Contenido token={token} organizacionId={org.id} zona={org.zonaHoraria} planId={resuelto.enlace.planId} qr={!!org.qrArchivoId} banco={org.datosBancarios} referenciaTipo={resuelto.enlace.referenciaTipo} referenciaId={resuelto.enlace.referenciaId} />
+        )}
+      </main>
+      <footer className="pb-6 text-center text-xs text-subtle-foreground">Tus datos están protegidos. Solo tú y {org.nombre} los ven.</footer>
+    </div>
   );
 }
 
 async function Contenido(p: { token: string; organizacionId: string; zona: string; planId: string; qr: boolean; banco: string | null; referenciaTipo: string | null; referenciaId: string | null }) {
   const hoy = hoyEnZona(p.zona);
   const qrUrl = p.qr ? `/p/${p.token}/qr` : null;
-  const accionSubir = accionSubirComprobante.bind(null, p.token);
+  const urlComprobante = `/p/${p.token}/comprobante`;
   // Tesis extiende el portal de Cobros cuando el enlace pertenece a una propuesta.
   if (p.referenciaTipo === REFERENCIA_PROPUESTA && p.referenciaId) {
     const datos = await withOrg(p.organizacionId, async (tx) => {
@@ -57,12 +88,13 @@ async function Contenido(p: { token: string; organizacionId: string; zona: strin
         hoy={hoy}
         qrUrl={qrUrl}
         datosBancarios={p.banco}
-        acciones={{ aceptar: accionAceptarPropuesta.bind(null, p.token), aceptarCronograma: accionAceptarCronograma.bind(null, p.token), subirComprobante: accionSubir }}
+        urlComprobante={urlComprobante}
+        acciones={{ aceptar: accionAceptarPropuesta.bind(null, p.token), aceptarCronograma: accionAceptarCronograma.bind(null, p.token) }}
         extras={await extrasPortalTesis(p.token, p.organizacionId, datos.proyecto)}
       />
     );
   }
   const d = await withOrg(p.organizacionId, (tx) => datosPortal(tx, p.planId, hoy));
   if (!d) return <p>Plan no encontrado.</p>;
-  return <PortalCobros d={d} qrUrl={qrUrl} datosBancarios={p.banco} accionSubir={accionSubir} />;
+  return <PortalCobros d={d} qrUrl={qrUrl} datosBancarios={p.banco} urlComprobante={urlComprobante} />;
 }

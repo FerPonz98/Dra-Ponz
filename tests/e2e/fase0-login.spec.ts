@@ -21,15 +21,21 @@ test.describe("Fase 0 · login y núcleo", () => {
     await expect(page.getByTestId("org-demo-dentista")).toBeVisible();
   });
 
-  test("la Dra. entra a su panel con cobros y tesis @movil", async ({ page }) => {
+  test("la Dra. entra a su panel con cobros y tesis @movil", async ({ page }, info) => {
     await iniciarSesion(page, "dra");
-    await expect(page.getByRole("heading", { name: /Hola/ })).toBeVisible();
-    await expect(page.getByText("Módulos activos: cobros, tesis")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: /Buenos días|Buenas tardes|Buenas noches/ })).toBeVisible();
+    await expect(page.getByText("Cobrado este mes")).toBeVisible();
+    if (info.project.name === "celular") await page.getByRole("button", { name: "Abrir menú" }).click();
+    const menu = page.getByRole("navigation", { name: "Menú principal" });
+    await expect(menu.getByRole("link", { name: "Clientes" })).toBeVisible();
+    await expect(menu.getByRole("link", { name: "Propuestas y proyectos" })).toBeVisible();
   });
 
   test("Demo Dentista solo tiene cobros y no puede entrar a tesis", async ({ page }) => {
     await iniciarSesion(page, "demo");
-    await expect(page.getByText("Módulos activos: cobros")).toBeVisible();
+    const menu = page.getByRole("navigation", { name: "Menú principal" });
+    await expect(menu.getByRole("link", { name: "Clientes" })).toBeVisible();
+    await expect(menu.getByRole("link", { name: "Propuestas y proyectos" })).toHaveCount(0);
     await page.goto("/panel/tesis/propuestas");
     await expect(page.getByText(/Acceso no permitido|no encontrada/)).toBeVisible();
   });

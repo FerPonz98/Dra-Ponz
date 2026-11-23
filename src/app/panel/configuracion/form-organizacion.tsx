@@ -1,9 +1,9 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
-import { Aviso } from "@/components/ui/aviso";
 import { Button } from "@/components/ui/button";
 import { Campo, Input, Select, Textarea } from "@/components/ui/input";
+import { notificar } from "@/components/ui/toaster";
 import { accionGuardarOrganizacion } from "./acciones";
 
 type Inicial = { nombre: string; colorPrimario: string; colorSecundario: string; datosBancarios: string; monedaDefecto: "BOB" | "BRL"; whatsapp: string; dominio: string };
@@ -12,15 +12,12 @@ export function FormOrganizacion({ inicial, qrId, logoId }: { inicial: Inicial; 
   const router = useRouter();
   const [estado, accion, pendiente] = useActionState(accionGuardarOrganizacion, null);
   useEffect(() => {
-    if (estado?.ok) router.refresh();
+    if (!estado) return;
+    notificar(estado);
+    if (estado.ok) router.refresh();
   }, [estado, router]);
   return (
     <form action={accion} className="grid gap-4 md:grid-cols-2">
-      {estado && (
-        <div className="md:col-span-2">
-          <Aviso tipo={estado.ok ? "exito" : "error"}>{estado.mensaje}</Aviso>
-        </div>
-      )}
       <Campo etiqueta="Nombre" htmlFor="o-nombre">
         <Input id="o-nombre" name="nombre" defaultValue={inicial.nombre} required />
       </Campo>
@@ -55,11 +52,11 @@ export function FormOrganizacion({ inicial, qrId, logoId }: { inicial: Inicial; 
       </Campo>
       {qrId && (
         // eslint-disable-next-line @next/next/no-img-element -- imagen privada servida por ruta autenticada
-        <img src={`/api/archivos/${qrId}`} alt="QR de cobro actual" className="h-40 w-40 rounded border object-contain" />
+        <img src={`/api/archivos/${qrId}`} alt="QR de cobro actual" className="h-40 w-40 rounded-xl border border-border bg-white object-contain p-2" />
       )}
-      <div className="md:col-span-2">
+      <div className="border-t border-border pt-4 md:col-span-2">
         <Button type="submit" disabled={pendiente}>
-          Guardar
+          {pendiente ? "Guardando…" : "Guardar"}
         </Button>
       </div>
     </form>

@@ -1,14 +1,14 @@
 import { Badge, type VarianteBadge } from "@/components/ui/badge";
 import type { EstadoMora } from "@/modules/cobros/schema";
 
-const MORA: Record<EstadoMora, { texto: string; v: VarianteBadge }> = {
+export const ETIQUETA_MORA: Record<EstadoMora, { texto: string; v: VarianteBadge }> = {
   al_dia: { texto: "Al día", v: "exito" },
-  vencida: { texto: "Vencida (en gracia)", v: "aviso" },
+  vencida: { texto: "En gracia", v: "aviso" },
   en_cola: { texto: "En cola", v: "peligro" },
 };
 
 export function BadgeMora({ estado }: { estado: EstadoMora }) {
-  const e = MORA[estado];
+  const e = ETIQUETA_MORA[estado];
   return <Badge variant={e.v}>{e.texto}</Badge>;
 }
 
@@ -22,13 +22,14 @@ export function BadgePago({ estado }: { estado: string }) {
   return <Badge variant={e.v}>{e.texto}</Badge>;
 }
 
-export function BadgeCuota({ situacion }: { situacion: "pagada" | "al_dia" | "vencida" | "en_cola" | "en_revision" }) {
-  const m: Record<typeof situacion, { texto: string; v: VarianteBadge }> = {
-    pagada: { texto: "Pagada", v: "exito" },
-    al_dia: { texto: "Pendiente", v: "secondary" },
-    vencida: { texto: "Vencida", v: "aviso" },
-    en_cola: { texto: "En cola", v: "peligro" },
-    en_revision: { texto: "En revisión", v: "info" },
-  };
-  return <Badge variant={m[situacion].v}>{m[situacion].texto}</Badge>;
+export type SituacionCuota = "pagada" | "al_dia" | "vencida" | "en_cola" | "en_revision";
+export const ETIQUETA_CUOTA: Record<SituacionCuota, { texto: string; v: VarianteBadge }> = {
+  pagada: { texto: "Pagada", v: "exito" },
+  al_dia: { texto: "Pendiente", v: "secondary" },
+  vencida: { texto: "Vencida", v: "aviso" },
+  en_cola: { texto: "En cola", v: "peligro" },
+  en_revision: { texto: "En revisión", v: "info" },
+};
+export function BadgeCuota({ situacion }: { situacion: SituacionCuota }) {
+  return <Badge variant={ETIQUETA_CUOTA[situacion].v}>{ETIQUETA_CUOTA[situacion].texto}</Badge>;
 }

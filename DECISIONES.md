@@ -186,3 +186,22 @@ Cuando el prompt no fue explícito se eligió la opción más simple y segura. A
 - **Usuarios y roles** (núcleo, se completó en esta fase): el admin de la organización crea roles con permisos por
   módulo y usuarios con contraseña inicial; puede cambiar el rol o desactivar (cierra sus sesiones). No puede
   desactivarse a sí mismo. Los roles se validan con RLS (solo los de su organización).
+
+## Rediseño de la interfaz (sin cambios de lógica)
+
+- **Sistema de diseño** documentado en `DISENO.md`: tokens CSS + Tailwind 4, dos identidades (plataforma índigo/grises
+  cálidos con modo oscuro; landing petróleo/dorado/crema con Fraunces + Inter). Fraunces se carga solo en la landing.
+- **Modo oscuro** por cookie `tema` (la lee el layout raíz, sin parpadeo). La landing ignora el tema y queda clara.
+- **Nuevas dependencias de UI**: Radix (dialog, alert-dialog, dropdown-menu, tabs) y `sonner` para toasts. Se
+  descartó framer-motion: las animaciones de la landing son CSS + `IntersectionObserver` (menos JS, Lighthouse 96–100).
+- **FullCalendar v7** se mantiene (stack obligatorio) con barra propia (mes/semana/lista), chips propios vía
+  `eventContent` (sus clases CSS son atómicas y no se pueden estilizar) y panel lateral al hacer clic.
+- **Subidas del portal** (comprobante y archivos del estudiante) pasaron de server actions a rutas `POST
+  /p/{token}/comprobante` y `/p/{token}/archivos` con XHR para mostrar progreso; un archivo por petición. La validación
+  del servidor no cambió; el cliente además avisa antes de subir si pasa de 50 MB.
+- **Ficha del proyecto con pestañas** (Resumen, Cuotas, Cronograma, Archivos, Historial; `?tab=` para enlazar una).
+- **Confirmaciones** con diálogos propios (Radix AlertDialog) en lugar de `window.confirm`.
+- **Búsqueda global** `/panel/buscar` (clientes, planes y proyectos, según módulos y permisos).
+- **Accesibilidad**: nueva auditoría `npm run accesibilidad` (axe WCAG 2.1 AA) en claro, oscuro, landing y portal.
+- Los E2E se adaptaron a los cambios de interfaz (panel lateral de cliente, "Ya pagué, subir comprobante", diálogos,
+  pestañas); los flujos probados son los mismos.

@@ -1,9 +1,8 @@
 "use client";
+import { ArrowLeft, MailCheck } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { Aviso } from "@/components/ui/aviso";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Campo, Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 
@@ -21,30 +20,34 @@ export default function RecuperarPage() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Recuperar contraseña</CardTitle>
-        <CardDescription>Te enviaremos un enlace a tu correo.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {enviado ? (
-          <Aviso tipo="exito">Si el correo está registrado, recibirás un enlace para crear una nueva contraseña.</Aviso>
-        ) : (
-          <form onSubmit={enviar} className="space-y-4">
+    <div className="space-y-8">
+      {enviado ? (
+        <div className="space-y-3 text-center">
+          <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-exito-soft text-exito">
+            <MailCheck className="size-6" aria-hidden />
+          </span>
+          <h1 className="text-2xl font-semibold tracking-tight">Revisa tu correo</h1>
+          <p className="text-sm text-muted-foreground">Si el correo está registrado, te llegará un enlace para crear una nueva contraseña. Vence en 1 hora.</p>
+        </div>
+      ) : (
+        <>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold tracking-tight">Recuperar contraseña</h1>
+            <p className="text-sm text-muted-foreground">Escribe tu correo y te enviaremos un enlace para crear una nueva.</p>
+          </div>
+          <form onSubmit={enviar} className="space-y-5">
             <Campo etiqueta="Correo" htmlFor="correo">
-              <Input id="correo" name="correo" type="email" required autoComplete="email" />
+              <Input id="correo" name="correo" type="email" required autoComplete="email" autoFocus />
             </Campo>
-            <Button type="submit" className="w-full" disabled={cargando}>
-              Enviar enlace
+            <Button type="submit" size="lg" className="w-full" disabled={cargando}>
+              {cargando ? "Enviando…" : "Enviar enlace"}
             </Button>
           </form>
-        )}
-        <p className="mt-4 text-center text-sm">
-          <Link href="/login" className="text-primary hover:underline">
-            Volver a iniciar sesión
-          </Link>
-        </p>
-      </CardContent>
-    </Card>
+        </>
+      )}
+      <Link href="/login" className="flex items-center justify-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="size-4" aria-hidden /> Volver a iniciar sesión
+      </Link>
+    </div>
   );
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { hoyDe, requerirModulo } from "@/core/contexto";
 import { Aviso } from "@/components/ui/aviso";
+import { EncabezadoPagina, Migas } from "@/components/ui/varios";
 import { withOrg } from "@/lib/db";
 import { listarClientes } from "@/modules/cobros/servicios/clientes";
 import { ESTADOS_EDITABLES } from "@/modules/tesis/dominio/estados";
@@ -25,9 +26,13 @@ export default async function EditarPropuestaPage(props: { params: Promise<{ id:
   if (!d.p) notFound();
   if (d.p.propuesta.aceptadaEn || !ESTADOS_EDITABLES.includes(d.p.propuesta.estado)) redirect(`/panel/tesis/propuestas/${id}`);
   return (
-    <div className="mx-auto max-w-4xl space-y-4">
-      <h1 className="text-2xl font-semibold">Editar propuesta</h1>
-      {d.p.propuesta.estado === "vencida" && <Aviso tipo="aviso">Esta propuesta venció. Puedes editar todo y luego reenviarla con un enlace nuevo.</Aviso>}
+    <div className="space-y-4">
+      <EncabezadoPagina
+        migas={<Migas items={[{ etiqueta: "Propuestas y proyectos", href: "/panel/tesis/propuestas" }, { etiqueta: d.p.propuesta.titulo, href: `/panel/tesis/propuestas/${id}` }, { etiqueta: "Editar" }]} />}
+        titulo="Editar propuesta"
+        descripcion="Los cambios del plan de pagos quedan en su historial."
+      />
+      {d.p.propuesta.estado === "vencida" && <Aviso tipo="aviso" titulo="Esta propuesta venció">Puedes editar todo y luego reenviarla con un enlace nuevo.</Aviso>}
       <AsistentePropuesta id={id} inicial={valorDesdeProyecto(d.p, hoy)} estudiantes={d.estudiantes.map((c) => ({ id: c.id, nombre: c.nombre }))} formularios={d.formularios} hoy={hoy} />
     </div>
   );

@@ -36,16 +36,17 @@ test.describe("Fase 4 · portal del estudiante completo", () => {
 
     // 3) Estudiante: acepta y paga la 1.ª cuota
     const est = await browser.newPage();
-    est.on("dialog", (d) => d.accept());
     await est.goto(ruta);
     await est.getByLabel("Carnet de identidad (CI)").fill(ci);
     await est.getByRole("button", { name: "Entrar" }).click();
     await est.getByRole("button", { name: "Acepto la propuesta" }).click();
+    await est.getByRole("alertdialog").getByRole("button", { name: "Sí, acepto" }).click();
     await expect(est.getByTestId("aceptada-portal")).toBeVisible();
     await expect(est.getByTestId("monto-bs")).toHaveText("Bs 1.000,00");
+    await est.getByRole("button", { name: "Ya pagué, subir comprobante" }).click();
     await est.getByLabel("Comprobante (foto o PDF, máx. 50 MB)").setInputFiles("tests/fixtures/comprobante.pdf");
     await est.getByRole("button", { name: "Enviar comprobante" }).click();
-    await expect(est.getByText("¡Comprobante enviado!")).toBeVisible();
+    await expect(est.getByText(/¡Comprobante enviado!/).first()).toBeVisible();
 
     // La Dra. aprueba → proyecto "Aceptada"
     await page.goto("/panel/cobros/pagos");
@@ -86,18 +87,22 @@ test.describe("Fase 4 · portal del estudiante completo", () => {
 
     // 6) Pide la 3.ª revisión y las diapositivas
     await est.getByRole("button", { name: "Pedir 3.ª revisión" }).click();
+    await est.getByRole("alertdialog").getByRole("button", { name: "Sí, pedirla" }).click();
     await expect(est.getByText("3.ª revisión del tribunal: solicitada")).toBeVisible();
     await est.getByRole("button", { name: /Pedir diapositivas/ }).click();
     await expect(est.getByText("Diapositivas para la sustentación: solicitado")).toBeVisible();
 
     // 7) La Dra. ve archivos y respuestas, marca actividades y aprueba la 3.ª revisión
     await page.reload();
+    await page.getByRole("tab", { name: /Archivos/ }).click();
     await expect(page.getByTestId("archivos-proyecto")).toContainText("datos.zip");
     await expect(page.getByTestId("archivos-proyecto")).toContainText("Perfil de investigación");
     await expect(page.getByText("Formulario respondido")).toBeVisible();
+    await page.getByRole("tab", { name: "Cronograma" }).click();
     await page.getByLabel('Marcar "Revisión bibliográfica" como hecha').check();
     await page.getByLabel('Marcar "Elaboración del perfil de investigación" como hecha').check();
     await expect(page.getByTestId("avance")).toContainText("22%");
+    await page.getByRole("tab", { name: "Resumen" }).click();
     await page.getByRole("button", { name: "Aprobar y cobrar" }).first().click();
     await expect(page.getByText("Revisión 3")).toBeVisible();
 

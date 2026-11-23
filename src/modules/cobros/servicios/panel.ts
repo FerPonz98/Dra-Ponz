@@ -1,4 +1,5 @@
 import { and, asc, eq, gte, inArray, lt, lte, sql } from "drizzle-orm";
+import { archivos } from "@/core/db/schema";
 import type { Ejecutor } from "@/lib/db";
 import { sumarDias, sumarMeses } from "@/lib/fechas";
 import { clientes, cuotas, enlacesPortal, pagos, planesPago, recargos, type Moneda } from "@/modules/cobros/schema";
@@ -87,4 +88,57 @@ export async function resumenPanel(tx: Ejecutor, hoy: string, zona: string) {
   const [cola] = await tx.select({ n: sql<number>`count(*)::int` }).from(planesPago).where(and(eq(planesPago.estado, "activo"), eq(planesPago.estadoMora, "en_cola")));
   const [porAprobar] = await tx.select({ n: sql<number>`count(*)::int` }).from(pagos).where(eq(pagos.estado, "pendiente"));
   return { cobradoMesBob: cobrado.total, porCobrar, vencido, planesEnCola: cola.n, comprobantesPorAprobar: porAprobar.n };
+}
+
+/** Series para los mini gráficos del inicio. Montos en centavos (BOB para lo cobrado; por moneda para lo pendiente). */
+export async function seriesPanel(tx: Ejecutor, hoy: string, zona: string) {
+  const inicioMes = `${hoy.slice(0, 8)}01`;
+  const meses = Array.from({ length: 6 }, (_, i) => sumarMeses(inicioMes, i - 5));
+  const cobradas = await tx
+    .select({ mes: sql<string>`to_char((${pagos.revisadoEn} at time zone ${zona})::date, 'YYYY-MM')`, total: sql<number>`sum(${pagos.montoBobCentavos})::int` })
+    .from(pagos)
+    .where(and(eq(pagos.estado, "aprobado"), gte(sql`(${pagos.revisadoEn} at time zone ${zona})::date`, meses[0])))
+    .groupBy(sql`1`);
+  const cobrado = meses.map((m) => cobradas.find((x) => x.mes === m.slice(0, 7))?.total ?? 0);
+
+  const pendientes = await tx
+    .select({ fecha: cuotas.fechaVencimiento, moneda: planesPago.moneda, monto: cuotas.montoCentavos })
+    .from(cuotas)
+    .innerJoin(planesPago, eq(planesPago.id, cuotas.planId))
+    .where(and(eq(cuotas.estado, "pendiente"), eq(planesPago.estado, "activo")));
+  const proximos = Array.from({ length: 6 }, (_, i) => sumarMeses(inicioMes, i));
+  const porCobrar = proximos.map((m) => pendientes.filter((p) => p.fecha.slice(0, 7) === m.slice(0, 7)).reduce((s, p) => s + p.monto, 0));
+  const dias = (f: string) => Math.round((Date.parse(hoy) - Date.parse(f)) / 86_400_000);
+  const vencidas = pendientes.filter((p) => p.fecha < hoy);
+  const antiguedad = [
+    vencidas.filter((p) => dias(p.fecha) <= 30).length,
+    vencidas.filter((p) => dias(p.fecha) > 30 && dias(p.fecha) <= 60).length,
+    vencidas.filter((p) => dias(p.fecha) > 60 && dias(p.fecha) <= 90).length,
+    vencidas.filter((p) => dias(p.fecha) > 90).length,
+  ];
+  return { cobrado, porCobrar, antiguedad, cuotasPendientes: pendientes.length, cuotasVencidas: vencidas.length, mesActual: meses[5] };
+}
+
+/** Comprobantes por aprobar con el tipo de archivo (para la vista previa). */
+export async function comprobantesPorAprobar(tx: Ejecutor, limite = 6) {
+  return tx
+    .select({
+      id: pagos.id,
+      planId: pagos.planId,
+      montoBobCentavos: pagos.montoBobCentavos,
+      creadoEn: pagos.creadoEn,
+      archivoId: pagos.comprobanteArchivoId,
+      mime: archivos.tipoMime,
+      cliente: clientes.nombre,
+      numero: cuotas.numero,
+      plan: planesPago.titulo,
+    })
+    .from(pagos)
+    .innerJoin(cuotas, eq(cuotas.id, pagos.cuotaId))
+    .innerJoin(planesPago, eq(planesPago.id, pagos.planId))
+    .innerJoin(clientes, eq(clientes.id, planesPago.clienteId))
+    .leftJoin(archivos, eq(archivos.id, pagos.comprobanteArchivoId))
+    .where(eq(pagos.estado, "pendiente"))
+    .orderBy(asc(pagos.creadoEn))
+    .limit(limite);
 }

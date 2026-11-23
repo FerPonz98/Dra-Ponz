@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { requerirPermiso } from "@/core/contexto";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EncabezadoPagina } from "@/components/ui/varios";
 import { FormOrganizacion } from "./form-organizacion";
 
 export const metadata: Metadata = { title: "Organización" };
@@ -9,11 +10,12 @@ export default async function ConfiguracionPage() {
   const ctx = await requerirPermiso("organizacion:configurar");
   const o = ctx.organizacion;
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
-      <h1 className="text-2xl font-semibold">Organización</h1>
+    <div className="mx-auto max-w-4xl">
+      <EncabezadoPagina titulo="Organización" descripcion="Datos de tu negocio, colores y lo que ven tus clientes al pagar." />
       <Card>
         <CardHeader>
           <CardTitle>Datos, marca y cobro</CardTitle>
+          <CardDescription>El QR y los datos bancarios aparecen en el portal de pago de tus clientes.</CardDescription>
         </CardHeader>
         <CardContent>
           <FormOrganizacion

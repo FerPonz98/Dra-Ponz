@@ -71,7 +71,7 @@ export async function crearPlan(tx: Ejecutor, actor: Actor, datos: DatosPlan & {
   await tx.insert(cuotas).values(
     d.cuotas.map((c, i) => ({ organizacionId: actor.organizacionId, planId: p.id, numero: i + 1, concepto: c.concepto ?? null, montoCentavos: c.montoCentavos, fechaVencimiento: c.fechaVencimiento })),
   );
-  await anotar(tx, actor, p.id, [{ cuotaId: null, campo: "plan creado", valorAntes: null, valorDespues: `${d.cuotas.length} cuotas · total ${(calcularTotal(d.cuotas) / 100).toFixed(2)} ${d.moneda}` }]);
+  await anotar(tx, actor, p.id, [{ cuotaId: null, campo: "plan creado", valorAntes: null, valorDespues: `${d.cuotas.length} ${d.cuotas.length === 1 ? "cuota" : "cuotas"} · total ${(calcularTotal(d.cuotas) / 100).toFixed(2)} ${d.moneda}` }]);
   return p;
 }
 

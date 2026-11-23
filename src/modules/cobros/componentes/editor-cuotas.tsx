@@ -41,8 +41,8 @@ export function EditorCuotas({ value, onChange, moneda, hoy }: Props) {
 
   return (
     <div className="space-y-4">
-      <fieldset className="grid grid-cols-2 gap-3 rounded-md border p-3 sm:grid-cols-4">
-        <legend className="px-1 text-xs text-muted-foreground">Generar cuotas mensuales</legend>
+      <fieldset className="grid grid-cols-2 gap-3 rounded-xl border border-border bg-surface-2/60 p-4 sm:grid-cols-4">
+        <legend className="rounded-md bg-surface px-2 text-xs font-medium text-muted-foreground">Generar cuotas mensuales</legend>
         <div className="space-y-1">
           <Label htmlFor="gen-n">N.º de cuotas</Label>
           <Input id="gen-n" inputMode="numeric" value={n} onChange={(e) => setN(e.target.value)} />
@@ -110,7 +110,7 @@ export function EditorCuotas({ value, onChange, moneda, hoy }: Props) {
           <Plus /> Agregar cuota
         </Button>
         <p className="text-sm">
-          Total: <strong data-testid="total-plan">{formatoMoneda(totalCentavos, moneda)}</strong> · {value.length} cuotas
+          Total: <strong data-testid="total-plan">{formatoMoneda(totalCentavos, moneda)}</strong> · {value.length} {value.length === 1 ? "cuota" : "cuotas"}
         </p>
       </div>
     </div>

@@ -31,12 +31,12 @@ export function FormNuevaOrganizacion() {
       </Campo>
       <fieldset className="md:col-span-2">
         <legend className="text-sm font-medium">Módulos</legend>
-        <div className="mt-2 flex gap-4 text-sm">
-          <label className="flex items-center gap-2">
-            <input type="checkbox" name="modulos" value="cobros" defaultChecked /> Cobros
+        <div className="mt-2 flex gap-2 text-sm">
+          <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 has-[:checked]:border-primary has-[:checked]:bg-primary-soft">
+            <input type="checkbox" name="modulos" value="cobros" defaultChecked className="accent-[var(--primary)]" /> Cobros
           </label>
-          <label className="flex items-center gap-2">
-            <input type="checkbox" name="modulos" value="tesis" /> Tesis
+          <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 has-[:checked]:border-primary has-[:checked]:bg-primary-soft">
+            <input type="checkbox" name="modulos" value="tesis" className="accent-[var(--primary)]" /> Tesis
           </label>
         </div>
       </fieldset>

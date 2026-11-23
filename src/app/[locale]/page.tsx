@@ -70,7 +70,30 @@ export default async function LandingPage({ params }: Props) {
         idioma={locale as "es" | "pt"}
         whatsapp={org.whatsapp ?? process.env.WHATSAPP_LANDING ?? ""}
         fotoUrl={hayFoto ? FOTO : null}
-        t={{ cta: t("cta"), ctaCorto: t("ctaCorto"), mensajeWhatsapp: t("mensajeWhatsapp"), fotoAlt: t("fotoAlt"), idioma: t("idioma") }}
+        t={{
+          cta: t("cta"),
+          ctaCorto: t("ctaCorto"),
+          mensajeWhatsapp: t("mensajeWhatsapp"),
+          fotoAlt: t("fotoAlt"),
+          idioma: t("idioma"),
+          saltar: t("saltar"),
+          navServicios: t("navServicios"),
+          navProceso: t("navProceso"),
+          navTrayectoria: t("navTrayectoria"),
+          navFaq: t("navFaq"),
+          cred1: t("cred1"),
+          cred2: t("cred2"),
+          cred3: t("cred3"),
+          etiquetaCifras: t("etiquetaCifras"),
+          eyebrowServicios: t("eyebrowServicios"),
+          eyebrowProceso: t("eyebrowProceso"),
+          eyebrowPorque: t("eyebrowPorque"),
+          eyebrowTrayectoria: t("eyebrowTrayectoria"),
+          eyebrowFaq: t("eyebrowFaq"),
+          respuestaRapida: t("respuestaRapida"),
+          niveles: t("niveles"),
+          pie: t("pie"),
+        }}
       />
     </>
   );

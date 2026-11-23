@@ -35,31 +35,12 @@ export function FormularioPortal({ campos, descripcion, accion, enviado }: { cam
                 ))}
               </Select>
             )}
-            {(c.tipo === "archivo" || c.tipo === "zip") && <Input id={id} name={id} type="file" accept={ACEPTA_POR_TIPO[c.tipo]} required={c.obligatorio} />}
+            {(c.tipo === "archivo" || c.tipo === "zip") && <Input id={id} name={id} type="file" accept={ACEPTA_POR_TIPO[c.tipo]} required={c.obligatorio} className="rounded-xl border-dashed bg-surface-2/60" />}
           </Campo>
         );
       })}
-      <Button type="submit" disabled={pendiente} className="w-full sm:w-auto">
+      <Button type="submit" size="lg" disabled={pendiente} className="h-14 w-full rounded-2xl text-base">
         {pendiente ? "Enviando…" : "Enviar formulario"}
-      </Button>
-    </form>
-  );
-}
-
-/** Paso 4: subir uno o varios archivos (PDF, Word, Excel o ZIP; 50 MB cada uno). */
-export function SubirArchivosPortal({ accion }: { accion: Accion }) {
-  const [estado, enviar, pendiente] = useActionState(accion, null);
-  return (
-    <form action={enviar} className="space-y-3">
-      {estado && <Aviso tipo={estado.ok ? "exito" : "error"}>{estado.mensaje}</Aviso>}
-      <Campo etiqueta="Archivos (PDF, Word, Excel o ZIP; máx. 50 MB c/u)" htmlFor="archivos-proyecto">
-        <Input id="archivos-proyecto" name="archivos" type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.zip" required />
-      </Campo>
-      <Campo etiqueta="Descripción (opcional)" htmlFor="descripcion-archivos">
-        <Input id="descripcion-archivos" name="descripcion" maxLength={200} placeholder="Ej. Encuestas aplicadas" />
-      </Campo>
-      <Button type="submit" disabled={pendiente} className="w-full sm:w-auto">
-        {pendiente ? "Subiendo…" : "Subir archivos"}
       </Button>
     </form>
   );

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requerirModulo } from "@/core/contexto";
+import { EncabezadoPagina, Migas } from "@/components/ui/varios";
 import { withOrg } from "@/lib/db";
 import { obtenerFormulario } from "@/modules/tesis/servicios/formularios";
 import { EditorFormulario } from "../editor-formulario";
@@ -12,8 +13,8 @@ export default async function FormularioPage(props: { params: Promise<{ id: stri
   const { id } = await props.params;
   if (id === "nuevo") {
     return (
-      <div className="mx-auto max-w-3xl space-y-4">
-        <h1 className="text-2xl font-semibold">Nuevo formulario</h1>
+      <div className="mx-auto max-w-3xl">
+        <EncabezadoPagina migas={<Migas items={[{ etiqueta: "Formularios", href: "/panel/tesis/formularios" }, { etiqueta: "Nuevo" }]} />} titulo="Nuevo formulario" descripcion="Agrega los campos en el orden en que quieres que el estudiante los complete." />
         <EditorFormulario inicial={{ nombre: "", descripcion: "", campos: [{ tipo: "texto_corto", etiqueta: "", ayuda: "", obligatorio: true, opciones: "" }] }} />
       </div>
     );
@@ -22,8 +23,8 @@ export default async function FormularioPage(props: { params: Promise<{ id: stri
   const f = await withOrg(ctx.organizacion.id, (tx) => obtenerFormulario(tx, id));
   if (!f) notFound();
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
-      <h1 className="text-2xl font-semibold">{f.nombre}</h1>
+    <div className="mx-auto max-w-3xl">
+      <EncabezadoPagina migas={<Migas items={[{ etiqueta: "Formularios", href: "/panel/tesis/formularios" }, { etiqueta: f.nombre }]} />} titulo={f.nombre} descripcion="Los cambios no afectan las respuestas que ya se enviaron." />
       <EditorFormulario
         id={f.id}
         inicial={{ nombre: f.nombre, descripcion: f.descripcion ?? "", campos: f.campos.map((c) => ({ id: c.id, tipo: c.tipo, etiqueta: c.etiqueta, ayuda: c.ayuda ?? "", obligatorio: c.obligatorio, opciones: c.opciones.join("\n") })) }}

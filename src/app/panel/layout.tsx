@@ -1,91 +1,70 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { cookies } from "next/headers";
 import { requerirOrganizacion } from "@/core/contexto";
-import type { Permiso } from "@/core/permisos";
 import type { CodigoModulo } from "@/core/db/schema";
-import { BotonSalir } from "@/components/boton-salir";
-import { MenuMovil } from "@/components/menu-movil";
+import type { Permiso } from "@/core/permisos";
+import { ShellPanel, type GrupoNav, type ItemNav } from "@/components/panel/shell";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
-type Item = { href: string; etiqueta: string; modulo?: CodigoModulo; permiso?: Permiso };
+type Item = ItemNav & { modulo?: CodigoModulo; permiso?: Permiso };
 const GRUPOS: { titulo: string; items: Item[] }[] = [
-  { titulo: "General", items: [{ href: "/panel", etiqueta: "Resumen" }] },
+  { titulo: "Inicio", items: [{ href: "/panel", etiqueta: "Resumen", icono: "inicio", exacto: true }] },
   {
     titulo: "Cobros",
     items: [
-      { href: "/panel/cobros/clientes", etiqueta: "Clientes", modulo: "cobros", permiso: "cobros:ver" },
-      { href: "/panel/cobros/planes", etiqueta: "Planes de pago", modulo: "cobros", permiso: "cobros:ver" },
-      { href: "/panel/cobros/pagos", etiqueta: "Comprobantes", modulo: "cobros", permiso: "cobros:aprobar" },
-      { href: "/panel/cobros/recordatorios", etiqueta: "Para recordar hoy", modulo: "cobros", permiso: "cobros:ver" },
-      { href: "/panel/cobros/plantillas", etiqueta: "Plantillas de mensaje", modulo: "cobros", permiso: "cobros:editar" },
+      { href: "/panel/cobros/clientes", etiqueta: "Clientes", icono: "clientes", modulo: "cobros", permiso: "cobros:ver" },
+      { href: "/panel/cobros/planes", etiqueta: "Planes de pago", icono: "planes", modulo: "cobros", permiso: "cobros:ver" },
+      { href: "/panel/cobros/pagos", etiqueta: "Comprobantes", icono: "comprobantes", modulo: "cobros", permiso: "cobros:aprobar" },
+      { href: "/panel/cobros/recordatorios", etiqueta: "Para recordar hoy", icono: "recordar", modulo: "cobros", permiso: "cobros:ver" },
+      { href: "/panel/cobros/plantillas", etiqueta: "Plantillas de mensaje", icono: "plantillas", modulo: "cobros", permiso: "cobros:editar" },
     ],
   },
   {
     titulo: "Tesis",
     items: [
-      { href: "/panel/tesis/propuestas", etiqueta: "Propuestas y proyectos", modulo: "tesis", permiso: "tesis:ver" },
-      { href: "/panel/tesis/calendario", etiqueta: "Calendario", modulo: "tesis", permiso: "tesis:ver" },
-      { href: "/panel/tesis/formularios", etiqueta: "Formularios", modulo: "tesis", permiso: "tesis:editar" },
-      { href: "/panel/tesis/landing", etiqueta: "Landing pública", modulo: "tesis", permiso: "tesis:editar" },
+      { href: "/panel/tesis/propuestas", etiqueta: "Propuestas y proyectos", icono: "propuestas", modulo: "tesis", permiso: "tesis:ver" },
+      { href: "/panel/tesis/calendario", etiqueta: "Calendario", icono: "calendario", modulo: "tesis", permiso: "tesis:ver" },
+      { href: "/panel/tesis/formularios", etiqueta: "Formularios", icono: "formularios", modulo: "tesis", permiso: "tesis:editar" },
+      { href: "/panel/tesis/landing", etiqueta: "Landing pública", icono: "landing", modulo: "tesis", permiso: "tesis:editar" },
     ],
   },
   {
-    titulo: "Administración",
+    titulo: "Configuración",
     items: [
-      { href: "/panel/configuracion", etiqueta: "Organización", permiso: "organizacion:configurar" },
-      { href: "/panel/usuarios", etiqueta: "Usuarios y roles", permiso: "usuarios:gestionar" },
+      { href: "/panel/configuracion", etiqueta: "Organización", icono: "organizacion", permiso: "organizacion:configurar" },
+      { href: "/panel/usuarios", etiqueta: "Usuarios y roles", icono: "usuarios", permiso: "usuarios:gestionar" },
     ],
   },
 ];
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requerirOrganizacion();
-  const grupos = GRUPOS.map((g) => ({
-    ...g,
-    items: g.items.filter((i) => (!i.modulo || ctx.modulos.includes(i.modulo)) && (!i.permiso || ctx.puede(i.permiso))),
-  })).filter((g) => g.items.length > 0);
-
-  const nav = (
-    <nav aria-label="Menú principal" className="space-y-5">
-      {grupos.map((g) => (
-        <div key={g.titulo}>
-          <p className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{g.titulo}</p>
-          <ul className="mt-1 space-y-0.5">
-            {g.items.map((i) => (
-              <li key={i.href}>
-                <Link href={i.href} className="block rounded-md px-2 py-1.5 text-sm hover:bg-muted">
-                  {i.etiqueta}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
-    </nav>
-  );
+  const c = await cookies();
+  const permitido = (i: Item) => (!i.modulo || ctx.modulos.includes(i.modulo)) && (!i.permiso || ctx.puede(i.permiso));
+  const grupos: GrupoNav[] = GRUPOS.map((g) => ({ titulo: g.titulo, items: g.items.filter(permitido).map(({ href, etiqueta, icono, exacto }) => ({ href, etiqueta, icono, exacto })) })).filter((g) => g.items.length > 0);
+  const todos = grupos.flatMap((g) => g.items);
+  const preferidos = ["/panel", "/panel/cobros/clientes", "/panel/cobros/recordatorios", "/panel/tesis/propuestas", "/panel/cobros/planes"];
+  const inferior = preferidos.map((h) => todos.find((i) => i.href === h)).filter((x): x is ItemNav => !!x).slice(0, 4).map((i) => ({ ...i, etiqueta: CORTO[i.href] ?? i.etiqueta }));
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row" style={{ ["--primary" as string]: ctx.organizacion.colorPrimario }}>
-      <aside className="hidden w-60 shrink-0 border-r bg-background p-4 md:block">
-        <p className="mb-6 truncate px-2 font-semibold" title={ctx.organizacion.nombre}>
-          {ctx.organizacion.nombre}
-        </p>
-        {nav}
-      </aside>
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between gap-2 border-b px-4 py-3">
-          <MenuMovil titulo={ctx.organizacion.nombre}>{nav}</MenuMovil>
-          <p className="hidden text-sm text-muted-foreground md:block">Zona horaria: {ctx.organizacion.zonaHoraria}</p>
-          <div className="flex items-center gap-3">
-            <span className="hidden text-sm sm:inline" data-testid="usuario-actual">
-              {ctx.usuario.nombre}
-            </span>
-            <BotonSalir />
-          </div>
-        </header>
-        <main className="flex-1 bg-muted/40 p-4 md:p-6">{children}</main>
-      </div>
-    </div>
+    <ShellPanel
+      organizacion={{ nombre: ctx.organizacion.nombre, zona: ctx.organizacion.zonaHoraria }}
+      usuario={{ nombre: ctx.usuario.nombre, correo: ctx.usuario.correo }}
+      grupos={grupos}
+      inferior={inferior}
+      colapsadoInicial={c.get("panel_colapsado")?.value === "1"}
+      oscuroInicial={c.get("tema")?.value === "oscuro"}
+    >
+      {children}
+    </ShellPanel>
   );
 }
+
+const CORTO: Record<string, string> = {
+  "/panel": "Inicio",
+  "/panel/cobros/clientes": "Clientes",
+  "/panel/cobros/recordatorios": "Recordar",
+  "/panel/tesis/propuestas": "Tesis",
+  "/panel/cobros/planes": "Planes",
+};

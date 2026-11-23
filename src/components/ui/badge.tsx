@@ -2,16 +2,16 @@ import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-const badgeVariants = cva("inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold", {
+const badgeVariants = cva("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset", {
   variants: {
     variant: {
-      default: "border-transparent bg-primary text-primary-foreground",
-      secondary: "border-transparent bg-secondary text-secondary-foreground",
-      outline: "text-foreground",
-      exito: "border-transparent bg-emerald-100 text-emerald-800",
-      aviso: "border-transparent bg-amber-100 text-amber-900",
-      peligro: "border-transparent bg-red-100 text-red-800",
-      info: "border-transparent bg-sky-100 text-sky-900",
+      default: "bg-primary-soft text-primary ring-primary/20",
+      secondary: "bg-muted text-muted-foreground ring-border",
+      outline: "bg-transparent text-muted-foreground ring-border-strong",
+      exito: "bg-exito-soft text-exito ring-exito/20",
+      aviso: "bg-aviso-soft text-aviso ring-aviso/25",
+      peligro: "bg-peligro-soft text-peligro ring-peligro/20",
+      info: "bg-info-soft text-info ring-info/20",
     },
   },
   defaultVariants: { variant: "default" },
@@ -19,6 +19,12 @@ const badgeVariants = cva("inline-flex items-center rounded-full border px-2.5 p
 
 export type VarianteBadge = NonNullable<VariantProps<typeof badgeVariants>["variant"]>;
 
-export function Badge({ className, variant, ...props }: React.HTMLAttributes<HTMLSpanElement> & VariantProps<typeof badgeVariants>) {
-  return <span className={cn(badgeVariants({ variant }), className)} {...props} />;
+/** Etiqueta de estado con punto de color (el texto siempre acompaña al color). */
+export function Badge({ className, variant, punto = true, children, ...props }: React.HTMLAttributes<HTMLSpanElement> & VariantProps<typeof badgeVariants> & { punto?: boolean }) {
+  return (
+    <span className={cn(badgeVariants({ variant }), className)} {...props}>
+      {punto && <span aria-hidden className="size-1.5 rounded-full bg-current" />}
+      {children}
+    </span>
+  );
 }

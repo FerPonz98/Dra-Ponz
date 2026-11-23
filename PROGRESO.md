@@ -177,3 +177,31 @@
 | Lighthouse móvil | ✅ `/es` 98/100/100/100 · `/pt` 98/100/100/100 (rendimiento/accesibilidad/buenas prácticas/SEO) |
 | Revisión manual | ✅ `revisiones/fase-0` … `fase-6` (escritorio y 375 px) |
 | Seguridad | ✅ archivos solo con sesión (panel con RLS o portal del mismo plan), tokens de 256 bits, WhatsApp de recordatorios solo con sesión, Zod en todas las acciones, `.env` fuera del repo (verificado también en el historial), `CRON_SECRET` en tiempo constante, rol de la app sin BYPASSRLS |
+
+## Rediseño de la interfaz ✅
+
+**Hecho**
+- Sistema de diseño (`DISENO.md`) y componentes unificados en `src/components/ui` (botón, campos, tarjeta, badge,
+  tabla de datos, diálogos, menú, pestañas, toasts, estados vacíos, skeletons, KPI, línea de tiempo, zona de archivos).
+- Panel: barra lateral colapsable con íconos y grupos, barra superior con buscador, organización y menú de usuario,
+  modo oscuro, menú inferior + drawer en el celular. Inicio con KPI (ícono, variación, mini gráfico), "Para recordar
+  hoy" con WhatsApp y comprobantes con vista previa. Tablas con búsqueda/filtro/orden/paginación y tarjetas en el celular.
+  Asistente de propuesta con stepper, validación en línea y resumen lateral. Calendario propio. Ficha de proyecto con
+  anillo de avance, pestañas e historial en línea de tiempo.
+- Portal: encabezado con la marca, pasos con progreso, próxima cuota destacada, QR grande con monto en Bs,
+  "Ya pagué, subir comprobante", arrastrar y soltar con barra de progreso.
+- Landing ES/PT: portada serif con foto en arco y credenciales, cifras animadas, servicios con íconos, línea de tiempo
+  horizontal/vertical, trayectoria, acordeón, cierre en bloque de color, botón flotante de WhatsApp.
+- Capturas antes/después de 28–30 pantallas en 1440 y 375 px: `revisiones/diseno-antes/`, `revisiones/diseno-despues/`
+  (+ `oscuro/`).
+
+**Revisión**
+| Paso | Resultado |
+|---|---|
+| typecheck | ✅ 0 errores |
+| lint | ✅ 0 errores, 0 avisos |
+| build | ✅ |
+| test | ✅ 54/54 |
+| e2e | ✅ 21/21 con `next start` y 21/21 con el servidor standalone (2 omitidos por proyecto a propósito) |
+| Lighthouse móvil | ✅ `/es` 96/100/100/100 · `/pt` 99/100/100/100 |
+| Accesibilidad (axe WCAG 2.1 AA) | ✅ 0 violaciones serias o críticas en panel (claro y oscuro), landing y portal |

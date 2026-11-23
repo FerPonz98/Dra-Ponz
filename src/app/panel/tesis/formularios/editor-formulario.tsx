@@ -2,10 +2,10 @@
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Aviso } from "@/components/ui/aviso";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Campo, Input, Select, Textarea } from "@/components/ui/input";
+import { notificar } from "@/components/ui/toaster";
 import { ETIQUETA_TIPO, TIPOS_CAMPO, type TipoCampo } from "@/modules/tesis/dominio/campos";
 import { accionGuardarFormulario } from "./acciones";
 
@@ -16,7 +16,6 @@ export function EditorFormulario({ id, inicial }: { id?: string; inicial: { nomb
   const [nombre, setNombre] = useState(inicial.nombre);
   const [descripcion, setDescripcion] = useState(inicial.descripcion);
   const [campos, setCampos] = useState<CampoEd[]>(inicial.campos);
-  const [res, setRes] = useState<{ ok: boolean; mensaje?: string } | null>(null);
   const set = (i: number, c: Partial<CampoEd>) => setCampos((x) => x.map((y, j) => (j === i ? { ...y, ...c } : y)));
   const mover = (i: number, d: -1 | 1) =>
     setCampos((x) => {
@@ -32,7 +31,7 @@ export function EditorFormulario({ id, inicial }: { id?: string; inicial: { nomb
       { nombre, descripcion, campos: campos.map((c) => ({ id: c.id, tipo: c.tipo, etiqueta: c.etiqueta, ayuda: c.ayuda, obligatorio: c.obligatorio, opciones: c.opciones.split("\n").map((o) => o.trim()).filter(Boolean) })) },
       id,
     );
-    setRes(r);
+    notificar(r);
     if (r.ok && r.datos) {
       if (!id) router.push(`/panel/tesis/formularios/${r.datos.id}`);
       router.refresh();
@@ -53,8 +52,8 @@ export function EditorFormulario({ id, inicial }: { id?: string; inicial: { nomb
       </Card>
       {campos.map((c, i) => (
         <Card key={c.id ?? `n${i}`} data-testid="campo-formulario">
-          <CardHeader className="flex-row items-center justify-between">
-            <CardTitle className="text-base">Campo {i + 1}</CardTitle>
+          <CardHeader
+            acciones={
             <div className="flex gap-1">
               <Button type="button" variant="ghost" size="icon" aria-label={`Subir campo ${i + 1}`} onClick={() => mover(i, -1)}>
                 <ArrowUp />
@@ -66,6 +65,12 @@ export function EditorFormulario({ id, inicial }: { id?: string; inicial: { nomb
                 <Trash2 />
               </Button>
             </div>
+            }
+          >
+            <CardTitle className="flex items-center gap-2">
+              <span className="flex size-6 items-center justify-center rounded-md bg-primary-soft text-xs font-semibold text-primary">{i + 1}</span>
+              {c.etiqueta || "Campo sin etiqueta"}
+            </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-2">
             <Campo etiqueta="Etiqueta" htmlFor={`c-et-${i}`}>
@@ -97,7 +102,7 @@ export function EditorFormulario({ id, inicial }: { id?: string; inicial: { nomb
           </CardContent>
         </Card>
       ))}
-      <div className="flex flex-wrap gap-2">
+      <div className="sticky bottom-20 z-10 flex flex-wrap gap-2 rounded-xl border border-border bg-surface/95 p-3 shadow-md backdrop-blur lg:bottom-4">
         <Button type="button" variant="outline" onClick={() => setCampos((x) => [...x, { tipo: "texto_corto", etiqueta: "", ayuda: "", obligatorio: false, opciones: "" }])}>
           <Plus /> Agregar campo
         </Button>
@@ -105,7 +110,6 @@ export function EditorFormulario({ id, inicial }: { id?: string; inicial: { nomb
           Guardar formulario
         </Button>
       </div>
-      {res && <Aviso tipo={res.ok ? "exito" : "error"}>{res.mensaje}</Aviso>}
     </div>
   );
 }

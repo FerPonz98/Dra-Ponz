@@ -10,8 +10,8 @@ const VARIANTE: Record<EstadoProyecto, VarianteBadge> = {
   en_curso: "exito",
   en_gracia: "aviso",
   en_cola: "peligro",
-  tribunal: "info",
-  finalizado: "default",
+  tribunal: "default",
+  finalizado: "secondary",
 };
 
 export function BadgeEstadoProyecto({ estado }: { estado: EstadoProyecto }) {

@@ -15,6 +15,7 @@ test.describe("Fase 1 · Cobros de punta a punta", () => {
 
     // Cliente
     await page.goto("/panel/cobros/clientes");
+    await page.getByRole("button", { name: "Nuevo cliente" }).first().click();
     await page.getByLabel("Nombre completo").fill(`Cliente E2E ${id}`);
     await page.getByLabel("CI", { exact: true }).fill(ci);
     await page.getByLabel("Celular WhatsApp (con código de país)").fill("59171234567");
@@ -53,9 +54,10 @@ test.describe("Fase 1 · Cobros de punta a punta", () => {
     await expect(cliente.getByTestId("monto-bs")).toHaveText("Bs 250,00");
     await expect(cliente.getByAltText("Código QR para pagar")).toBeVisible();
     await expect(cliente.getByTestId("boton-whatsapp")).toHaveCount(0);
+    await cliente.getByRole("button", { name: "Ya pagué, subir comprobante" }).click();
     await cliente.getByLabel("Comprobante (foto o PDF, máx. 50 MB)").setInputFiles("tests/fixtures/comprobante.pdf");
     await cliente.getByRole("button", { name: "Enviar comprobante" }).click();
-    await expect(cliente.getByText("¡Comprobante enviado!")).toBeVisible();
+    await expect(cliente.getByText(/¡Comprobante enviado!/).first()).toBeVisible();
 
     // Un archivo del portal no se puede descargar sin sesión
     const anonimo = await browser.newContext();
