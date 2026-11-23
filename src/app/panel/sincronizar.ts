@@ -9,3 +9,9 @@ export async function sincronizarTrasPago(ctx: ContextoOrg, planId: string): Pro
   void ctx;
   void planId;
 }
+
+/** Parte de Tesis del job diario (vigencia de propuestas y estados de proyectos). */
+export async function jobTesisDiario(ahora: Date): Promise<unknown[]> {
+  void ahora;
+  return [];
+}

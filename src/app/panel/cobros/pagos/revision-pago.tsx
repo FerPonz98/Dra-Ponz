@@ -13,12 +13,15 @@ export function RevisionPago({ pagoId }: { pagoId: string }) {
   const [res, setRes] = useState<{ ok: boolean; mensaje?: string } | null>(null);
   const [ocupado, setOcupado] = useState(false);
 
-  async function correr(fn: () => Promise<{ ok: boolean; mensaje?: string }>) {
+  async function correr(fn: () => Promise<{ ok: boolean; mensaje?: string }>, hecho: "aprobado" | "rechazado") {
     setOcupado(true);
     const r = await fn();
-    setRes(r);
     setOcupado(false);
-    if (r.ok) router.refresh();
+    if (r.ok) {
+      // la tarjeta sale de la lista de pendientes: el aviso se muestra arriba de la página
+      router.replace(`/panel/cobros/pagos?hecho=${hecho}`);
+      router.refresh();
+    } else setRes(r);
   }
 
   return (
@@ -27,13 +30,13 @@ export function RevisionPago({ pagoId }: { pagoId: string }) {
       {rechazando ? (
         <div className="flex flex-col gap-2 sm:flex-row">
           <Input aria-label="Motivo del rechazo" placeholder="Motivo del rechazo" value={motivo} onChange={(e) => setMotivo(e.target.value)} />
-          <Button variant="destructive" disabled={ocupado} onClick={() => correr(() => accionRechazarPago(pagoId, motivo))}>
+          <Button variant="destructive" disabled={ocupado} onClick={() => correr(() => accionRechazarPago(pagoId, motivo), "rechazado")}>
             Confirmar rechazo
           </Button>
         </div>
       ) : (
         <div className="flex gap-2">
-          <Button disabled={ocupado} onClick={() => correr(() => accionAprobarPago(pagoId))}>
+          <Button disabled={ocupado} onClick={() => correr(() => accionAprobarPago(pagoId), "aprobado")}>
             Aprobar
           </Button>
           <Button variant="outline" disabled={ocupado} onClick={() => setRechazando(true)}>

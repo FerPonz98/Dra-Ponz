@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requerirModulo } from "@/core/contexto";
+import { Aviso } from "@/components/ui/aviso";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { withOrg } from "@/lib/db";
 import { formatoMoneda } from "@/lib/dinero";
@@ -11,7 +12,8 @@ import { RevisionPago } from "./revision-pago";
 
 export const metadata: Metadata = { title: "Comprobantes" };
 
-export default async function PagosPage() {
+export default async function PagosPage(props: { searchParams: Promise<{ hecho?: string }> }) {
+  const { hecho } = await props.searchParams;
   const ctx = await requerirModulo("cobros", "cobros:aprobar");
   const { pendientes, recientes } = await withOrg(ctx.organizacion.id, async (tx) => ({
     pendientes: await listarPagos(tx, "pendiente"),
@@ -20,6 +22,8 @@ export default async function PagosPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Comprobantes por aprobar</h1>
+      {hecho === "aprobado" && <Aviso tipo="exito">Pago aprobado.</Aviso>}
+      {hecho === "rechazado" && <Aviso tipo="info">Pago rechazado. El cliente verá el motivo en su portal.</Aviso>}
       {pendientes.length === 0 && <p className="text-sm text-muted-foreground">No hay comprobantes pendientes.</p>}
       <div className="grid gap-3 md:grid-cols-2">
         {pendientes.map((r) => (

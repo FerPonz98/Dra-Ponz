@@ -27,7 +27,8 @@ export function parsearBcb(html: string): { fecha: string | null; valor: number 
   if (!fila) throw new Error("No se encontró la fila BRL en la página del BCB");
   const valor = Number(fila[1].replace(",", "."));
   if (!Number.isFinite(valor) || valor <= 0 || valor > 100) throw new Error(`Cotización BRL inválida: ${fila[1]}`);
-  const f = html.match(/COTIZACI(?:&Oacute;|Ó|O)N:(?:&nbsp;|\s)*(\d{1,2}) de (\w+) (?:de )?(\d{4})/i);
+  const texto = html.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ");
+  const f = texto.match(/COTIZACI(?:&Oacute;|Ó|O)N:\s*(\d{1,2}) de (\w+) (?:de )?(\d{4})/i);
   const mes = f ? MESES[f[2].toLowerCase()] : undefined;
   const fecha = f && mes ? `${f[3]}-${mes}-${f[1].padStart(2, "0")}` : null;
   return { fecha, valor };

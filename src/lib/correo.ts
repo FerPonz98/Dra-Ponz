@@ -28,7 +28,7 @@ export async function enviarCorreo(c: Correo): Promise<{ via: "resend" | "smtp" 
   }
   const dir = join(/*turbopackIgnore: true*/ process.cwd(), ".data", "correos");
   await mkdir(dir, { recursive: true });
-  const nombre = `${Date.now()}-${c.para.replace(/[^a-z0-9@.]/gi, "_")}.json`;
+  const nombre = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}-${c.para.replace(/[^a-z0-9@.]/gi, "_")}.json`;
   await writeFile(join(dir, nombre), JSON.stringify({ ...c, fecha: new Date().toISOString() }, null, 2));
   console.info(`[correo] guardado en .data/correos/${nombre} → ${c.para}: ${c.asunto}`);
   return { via: "archivo" };

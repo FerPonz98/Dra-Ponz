@@ -45,7 +45,7 @@ function crearAuth() {
       enabled: true,
       window: 60,
       max: 100,
-      customRules: { "/sign-in/email": { window: 60, max: 10 }, "/request-password-reset": { window: 60, max: 5 } },
+      customRules: { "/sign-in/email": { window: 60, max: Number(process.env.LOGIN_MAX_POR_MINUTO ?? 10) }, "/request-password-reset": { window: 60, max: 5 } },
     },
     advanced: {
       database: { generateId: () => crypto.randomUUID() },

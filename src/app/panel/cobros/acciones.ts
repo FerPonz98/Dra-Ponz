@@ -11,6 +11,8 @@ import { anularEnlace, crearEnlace, urlPortal } from "@/modules/cobros/servicios
 import { aprobarPago, rechazarPago } from "@/modules/cobros/servicios/pagos";
 import { cambiarMonedaYTitulo, crearPlan, guardarCuotas, guardarReglas, recalcularMora, type DatosPlan } from "@/modules/cobros/servicios/planes";
 import { sincronizarTrasPago } from "@/app/panel/sincronizar";
+import { PLANTILLAS_BASE, type ClavePlantilla } from "@/modules/cobros/dominio/mensajes";
+import { guardarPlantilla } from "@/modules/cobros/servicios/mensajes";
 
 const uuid = z.uuid();
 
@@ -109,5 +111,13 @@ export async function accionRechazarPago(pagoId: string, motivo: string): Promis
   const ctx = await requerirModulo("cobros", "cobros:aprobar");
   const r = await ejecutar(() => withOrg(ctx.organizacion.id, (tx) => rechazarPago(tx, actorDe(ctx), uuid.parse(pagoId), motivo)), "Pago rechazado.");
   revalidatePath("/panel/cobros/pagos");
+  return r;
+}
+
+export async function accionGuardarPlantilla(clave: string, cuerpo: string): Promise<Resultado> {
+  const ctx = await requerirModulo("cobros", "cobros:editar");
+  const c = z.enum(PLANTILLAS_BASE.map((p) => p.clave) as [ClavePlantilla, ...ClavePlantilla[]]).parse(clave);
+  const r = await ejecutar(() => withOrg(ctx.organizacion.id, (tx) => guardarPlantilla(tx, ctx.organizacion.id, c, cuerpo)), "Plantilla guardada.");
+  revalidatePath("/panel/cobros/plantillas");
   return r;
 }

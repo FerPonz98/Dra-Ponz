@@ -11,6 +11,7 @@ export default defineConfig({
   timeout: 60_000,
   expect: { timeout: 10_000 },
   reporter: [["list"]],
+  globalSetup: "./tests/e2e/preparar.ts",
   use: { baseURL: URL_BASE, trace: "retain-on-failure", locale: "es-BO", timezoneId: "America/La_Paz" },
   projects: [
     { name: "escritorio", use: { ...devices["Desktop Chrome"] } },
@@ -19,8 +20,8 @@ export default defineConfig({
   webServer: {
     command: `npm run start -- -p ${PUERTO}`,
     url: `${URL_BASE}/login`,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120_000,
-    env: { BETTER_AUTH_URL: URL_BASE, APP_URL: URL_BASE, NODE_ENV: "production" },
+    env: { BETTER_AUTH_URL: URL_BASE, APP_URL: URL_BASE, NODE_ENV: "production", LOGIN_MAX_POR_MINUTO: "1000" },
   },
 });
