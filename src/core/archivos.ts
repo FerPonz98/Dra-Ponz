@@ -105,3 +105,10 @@ function rutaSegura(relativa: string) {
 }
 
 export class ErrorArchivo extends Error {}
+
+/** Valida un File (tamaño, extensión y magic bytes) sin escribirlo. Lanza ErrorArchivo con el nombre del archivo. */
+export async function prevalidarArchivo(archivo: File, permitidos: TipoArchivo[]) {
+  const inicio = new Uint8Array(await archivo.slice(0, 16).arrayBuffer());
+  const v = validarArchivo(archivo.name, archivo.size, inicio, permitidos);
+  if (!v.ok) throw new ErrorArchivo(`${archivo.name}: ${v.error}`);
+}

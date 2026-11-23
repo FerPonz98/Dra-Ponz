@@ -104,3 +104,24 @@
 | e2e | ✅ 13/13, incluye **crear → enviar → vencer → editar → reenviar → aceptar** (con PDF, WhatsApp, job diario y enlace viejo inutilizable) |
 | Revisión manual | ✅ `revisiones/fase-3/`. Se corrigió el historial, que mostraba fechas ISO |
 | Seguridad | ✅ PDF del panel exige sesión + módulo + permiso; PDF del portal exige sesión de portal del enlace; acciones del portal verifican que el enlace sea de esa propuesta |
+
+## Fase 4 — Formularios, archivos/ZIP, portal del estudiante, calendario y avance ✅
+
+**Hecho**
+- Creador de formularios (texto corto/largo, fecha, selección, archivo PDF/Word/Excel, ZIP; obligatorio/opcional, ayuda, orden).
+- Portal del estudiante completo: 1) revisar y aceptar (fecha y hora) → 2) pagar 1.ª cuota con QR + comprobante →
+  3) formulario → 4) subir archivos → 5) avance (barra %, actividad del mes, próxima cuota, revisiones). Pide la 3.ª
+  revisión y extras (diapositivas).
+- Ficha de la Dra.: archivos, respuestas del formulario, aprobación de solicitudes (agrega la cuota), avance.
+- Calendario FullCalendar (mes/semana) con actividades y cobros por color, con leyenda.
+
+**Revisión**
+| Paso | Resultado |
+|---|---|
+| typecheck | ✅ 0 errores |
+| lint | ✅ 0 errores, 0 avisos |
+| build | ✅ |
+| test | ✅ 54/54 (+3): validación de respuestas (obligatorios, fecha, selección, 51 MB), ids estables al editar, respuestas con PDF y ZIP, 51 MB y ZIP falso rechazados, subida libre con `.exe` rechazado |
+| e2e | ✅ 15/15, incluye **E2E del estudiante completo** (formulario creado → propuesta → aceptar → pagar → aprobación → formulario con archivos → 51 MB rechazado → ZIP subido → descarga solo con sesión → pide 3.ª revisión y diapositivas → Dra. marca actividades (22 %) y aprueba → estudiante ve avance → calendario mes/semana) |
+| Revisión manual | ✅ `revisiones/fase-4/` incluye el portal con sesión a 375 px (`portal-estudiante-con-sesion-movil.png`), sin desborde horizontal |
+| Seguridad | ✅ archivos del portal 200 con sesión / 404 sin ella (E2E); magic bytes; prevalidación antes de escribir; acciones del portal atadas a la propuesta del enlace |

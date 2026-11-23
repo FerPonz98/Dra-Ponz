@@ -22,8 +22,8 @@ export const formularios = pgTable("formularios", {
   creadoEn: creadoEn(),
 });
 
-export const TIPOS_CAMPO = ["texto_corto", "texto_largo", "fecha", "seleccion", "archivo", "zip"] as const;
-export type TipoCampo = (typeof TIPOS_CAMPO)[number];
+export { TIPOS_CAMPO, type TipoCampo } from "@/modules/tesis/dominio/campos";
+import type { TipoCampo } from "@/modules/tesis/dominio/campos";
 
 export const formularioCampos = pgTable(
   "formulario_campos",

@@ -123,3 +123,24 @@ Cuando el prompt no fue explícito se eligió la opción más simple y segura. A
 - **PDF** con `@react-pdf/renderer`, generado al vuelo (no se guarda): panel `/api/tesis/propuestas/{id}/pdf` y portal
   `/p/{token}/propuesta.pdf` (solo con sesión de portal).
 - **Extras por defecto**: catálogo por organización con "Diapositivas para la sustentación" (Bs 300, editable en cada propuesta).
+
+## Fase 4 — Formularios, archivos, portal del estudiante y calendario
+
+- **Formularios**: al editar, los campos existentes conservan su id (las respuestas ya enviadas siguen asociadas). Las
+  respuestas se guardan en `respuestas_formulario.valores` (JSON por etiqueta) y el estudiante puede reenviar para
+  corregir (se reemplazan).
+- **Tipos de archivo**: campo "archivo" → PDF, Word (.doc/.docx), Excel (.xls/.xlsx); campo "ZIP" → .zip. El paso 4
+  ("subir archivos") acepta PDF, Word, Excel o ZIP, hasta 10 por envío. 50 MB por archivo, validado en el servidor por
+  tamaño, extensión **y** magic bytes. Antes de escribir nada en disco se prevalidan **todos** los archivos del envío,
+  para no dejar archivos huérfanos si uno falla.
+- **Acceso a archivos desde el portal**: un estudiante descarga archivos de su propio plan (aunque se hayan subido con un
+  enlace anterior); sin sesión, 404.
+- **FullCalendar v7**: los plugins vienen dentro de `@fullcalendar/react` (`/daygrid`, `/timegrid`, tema `classic`); se
+  quitaron los paquetes v6 (`@fullcalendar/core`, etc.) y se agregó `temporal-polyfill`. Vistas mes y semana, en
+  español y en `America/La_Paz`.
+- **Colores del calendario**: actividad (vino), actividad hecha (lila), cobro al día (verde), por vencer en ≤ 3 días
+  (ámbar), en gracia (naranja), en cola (rojo), pagada (gris). Solo se muestran proyectos activos (enviados en adelante).
+- **Avance %** = actividades marcadas como hechas / total del cronograma vigente. "Actividad del mes" según la fecha de
+  inicio del cronograma aceptado.
+- **Aceptada → en curso**: si la fecha de inicio del cronograma ya llegó, el proyecto pasa a "en curso" en la siguiente
+  sincronización (al abrir la ficha o el portal, o con el job diario).
