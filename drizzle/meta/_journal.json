@@ -29,6 +29,20 @@
       "when": 1795391565608,
       "tag": "0003_rls_cobros",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795393103842,
+      "tag": "0004_tesis",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795393107381,
+      "tag": "0005_rls_tesis",
+      "breakpoints": true
     }
   ]
 }

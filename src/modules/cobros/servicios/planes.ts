@@ -178,6 +178,8 @@ export type PlanCompleto = NonNullable<Awaited<ReturnType<typeof obtenerPlanComp
 export async function recalcularMora(tx: Ejecutor, planId: string, hoy: string, zona?: string) {
   const [p] = await tx.select().from(planesPago).where(eq(planesPago.id, planId));
   if (!p || p.estado !== "activo") return null;
+  // Un plan aún no aceptado por el cliente (p. ej. una propuesta enviada) no entra en mora.
+  if (!p.aceptadoEn) return null;
   const lista = await tx.select().from(cuotas).where(eq(cuotas.planId, planId));
   const pendientes = await tx.select({ cuotaId: pagos.cuotaId }).from(pagos).where(and(eq(pagos.planId, planId), eq(pagos.estado, "pendiente")));
   const enRevision = new Set(pendientes.map((x) => x.cuotaId));

@@ -97,3 +97,29 @@ Cuando el prompt no fue explícito se eligió la opción más simple y segura. A
 - **E2E**: `tests/e2e/preparar.ts` borra al inicio los datos E2E de corridas anteriores (los de la última corrida quedan
   para las capturas de revisión).
 - **Commits**: se usa la identidad git global del equipo (no se pasa el correo por línea de comandos).
+
+## Fase 3 — Tesis: propuestas, cronograma, vigencia, estados, revisiones, extras y PDF
+
+- **Tesis reutiliza Cobros**: cada propuesta crea un plan con `crearPlan` (origen `tesis`, **sin aceptar**) y al editarla
+  usa `guardarCuotas`, `guardarReglas` y `cambiarMonedaYTitulo` de Cobros (historial incluido). El enlace del portal es
+  el de Cobros con `referencia_tipo = 'propuesta'`. Cobros no conoce a Tesis; la capa `src/app` une ambos
+  (`app/panel/sincronizar.ts` y el portal `/p/[token]`).
+- **Un plan no aceptado no entra en mora** (si no, una propuesta enviada con fechas pasadas acumularía recargos).
+- **Estudiante** = cliente de Cobros. En el paso 1 se elige uno existente o se crea uno nuevo en el mismo formulario.
+- **Asistente de 10 pasos** en una sola página (los pasos se pueden recorrer libremente). Al guardar se va a la ficha,
+  donde están la vista previa (PDF), "Generar enlace y enviar" y el botón de WhatsApp (paso 10 del prompt).
+- **Vigencia**: `expira_en = enviada_en + vigencia_dias`; el enlace se crea con ese mismo `expira_en`, así deja de abrir
+  exactamente al vencer aunque el job todavía no haya corrido. El job diario pasa la propuesta a `vencida` y pone el
+  token en `NULL` (enlace destruido). La propuesta queda guardada, se edita entera y se reenvía con un token nuevo.
+- **Al aceptar** se guarda fecha y hora (`aceptada_en`), el plan queda aceptado (corre el plazo de la 1.ª cuota) y el
+  enlace deja de vencer. La propuesta sigue `enviada` hasta que se aprueba la 1.ª cuota → `aceptada`; cuando llega la
+  fecha de inicio del cronograma → `en_curso`.
+- **Estados**: `en_gracia` y `en_cola` se derivan de la mora del plan. Al entrar en cola se marca
+  `requiere_nuevo_cronograma`: aunque pague, sigue `en_cola` hasta que acepte el cronograma nuevo (fechas corridas, que
+  la Dra. edita). `tribunal` y `finalizado` se marcan a mano.
+- **Revisiones**: se crean la 1.ª y la 2.ª como incluidas; la 3.ª se crea cuando el estudiante la pide, con el precio de
+  la propuesta, y al aprobarla se agrega una cuota al plan (vence a 7 días). Los extras funcionan igual.
+- **Defensa**: no es un extra; aparece en el cronograma como actividad "a cargo del estudiante".
+- **PDF** con `@react-pdf/renderer`, generado al vuelo (no se guarda): panel `/api/tesis/propuestas/{id}/pdf` y portal
+  `/p/{token}/propuesta.pdf` (solo con sesión de portal).
+- **Extras por defecto**: catálogo por organización con "Diapositivas para la sustentación" (Bs 300, editable en cada propuesta).

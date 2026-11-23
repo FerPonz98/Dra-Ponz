@@ -81,3 +81,26 @@
 | e2e | ✅ 12/12: jobs exigen CRON_SECRET, cuota vencida → en cola con recargo → recordatorio con WhatsApp (también 375 px), plantillas editables, sin sesión no hay botón de WhatsApp |
 | Revisión manual | ✅ `revisiones/fase-2/`. Se corrigió una carrera: el aviso "Pago aprobado" desaparecía con la tarjeta; ahora se muestra arriba de la página |
 | Seguridad | ✅ jobs con secreto en tiempo constante; botón WhatsApp solo en páginas del panel (con sesión); validación Zod de plantillas |
+
+## Fase 3 — Tesis: propuestas, cronograma, vigencia, estados, revisiones, extras, PDF ✅
+
+**Hecho**
+- Esquema de tesis (`0004_tesis`, `0005_rls_tesis`) con RLS.
+- Asistente de 10 pasos: datos (estudiante nuevo o existente), moneda, plan de pagos (en Cobros), cronograma
+  actividades × meses con "Cargar plantilla", mora, revisiones (2 incluidas + precio de la 3.ª), extras, formulario,
+  vigencia, vista previa.
+- Ficha del proyecto: PDF, generar/reenviar enlace (CI o PIN) con botón de WhatsApp, cuotas, avance %, actividades,
+  revisiones y extras con aprobación (agrega cuota), nuevo cronograma tras la cola, tribunal/finalizado, notas, historial.
+- Vigencia: enlace destruido al vencer, propuesta `vencida`, editable y reenviable.
+- Portal del estudiante: revisar (cuotas, cronograma, PDF) y aceptar; pagar la 1.ª cuota; aceptar cronograma nuevo; avance.
+
+**Revisión**
+| Paso | Resultado |
+|---|---|
+| typecheck | ✅ 0 errores |
+| lint | ✅ 0 errores, 0 avisos |
+| build | ✅ |
+| test | ✅ 51/51 (+6): plantilla de cronograma, avance y mes actual, máquina de estados, **vigencia: enlace invalidado, `vencida`, edición completa (moneda, cuotas, extras) y reenvío con token nuevo**, aceptación con fecha y hora, cola → nuevo cronograma → en curso |
+| e2e | ✅ 13/13, incluye **crear → enviar → vencer → editar → reenviar → aceptar** (con PDF, WhatsApp, job diario y enlace viejo inutilizable) |
+| Revisión manual | ✅ `revisiones/fase-3/`. Se corrigió el historial, que mostraba fechas ISO |
+| Seguridad | ✅ PDF del panel exige sesión + módulo + permiso; PDF del portal exige sesión de portal del enlace; acciones del portal verifican que el enlace sea de esa propuesta |

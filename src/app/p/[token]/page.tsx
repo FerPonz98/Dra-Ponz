@@ -6,8 +6,12 @@ import { datosPortal } from "@/modules/cobros/servicios/portal";
 import { sesionPortal } from "../sesion";
 import { AccesoPortal } from "./acceso-portal";
 import { accionSubirComprobante } from "./acciones";
+import { accionAceptarCronograma, accionAceptarPropuesta } from "./acciones-tesis";
+import { extrasPortalTesis } from "./extras-tesis";
+import { PortalTesis } from "@/modules/tesis/componentes/portal-tesis";
+import { obtenerProyecto, REFERENCIA_PROPUESTA, sincronizarProyecto } from "@/modules/tesis/servicios/propuestas";
 
-export const metadata: Metadata = { title: "Mi plan de pagos", robots: { index: false, follow: false }, referrer: "no-referrer" };
+export const metadata: Metadata = { title: "Mi portal", robots: { index: false, follow: false }, referrer: "no-referrer" };
 
 export default async function PortalPage(props: { params: Promise<{ token: string }> }) {
   const { token } = await props.params;
@@ -23,14 +27,42 @@ export default async function PortalPage(props: { params: Promise<{ token: strin
       ) : !autorizado ? (
         <AccesoPortal token={token} metodo={resuelto.enlace.metodo} organizacion={resuelto.organizacion.nombre} />
       ) : (
-        <Contenido token={token} organizacionId={resuelto.organizacion.id} zona={resuelto.organizacion.zonaHoraria} planId={resuelto.enlace.planId} qr={!!resuelto.organizacion.qrArchivoId} banco={resuelto.organizacion.datosBancarios} />
+        <Contenido token={token} organizacionId={resuelto.organizacion.id} zona={resuelto.organizacion.zonaHoraria} planId={resuelto.enlace.planId}
+          qr={!!resuelto.organizacion.qrArchivoId}
+          banco={resuelto.organizacion.datosBancarios}
+          referenciaTipo={resuelto.enlace.referenciaTipo}
+          referenciaId={resuelto.enlace.referenciaId}
+        />
       )}
     </main>
   );
 }
 
-async function Contenido(p: { token: string; organizacionId: string; zona: string; planId: string; qr: boolean; banco: string | null }) {
-  const d = await withOrg(p.organizacionId, (tx) => datosPortal(tx, p.planId, hoyEnZona(p.zona)));
+async function Contenido(p: { token: string; organizacionId: string; zona: string; planId: string; qr: boolean; banco: string | null; referenciaTipo: string | null; referenciaId: string | null }) {
+  const hoy = hoyEnZona(p.zona);
+  const qrUrl = p.qr ? `/p/${p.token}/qr` : null;
+  const accionSubir = accionSubirComprobante.bind(null, p.token);
+  // Tesis extiende el portal de Cobros cuando el enlace pertenece a una propuesta.
+  if (p.referenciaTipo === REFERENCIA_PROPUESTA && p.referenciaId) {
+    const datos = await withOrg(p.organizacionId, async (tx) => {
+      await sincronizarProyecto(tx, p.referenciaId!, hoy);
+      return { proyecto: await obtenerProyecto(tx, p.referenciaId!), d: await datosPortal(tx, p.planId, hoy) };
+    });
+    if (!datos.proyecto || !datos.d) return <p>Propuesta no encontrada.</p>;
+    return (
+      <PortalTesis
+        p={datos.proyecto}
+        d={datos.d}
+        token={p.token}
+        hoy={hoy}
+        qrUrl={qrUrl}
+        datosBancarios={p.banco}
+        acciones={{ aceptar: accionAceptarPropuesta.bind(null, p.token), aceptarCronograma: accionAceptarCronograma.bind(null, p.token), subirComprobante: accionSubir }}
+        extras={await extrasPortalTesis(p.token, p.organizacionId, datos.proyecto)}
+      />
+    );
+  }
+  const d = await withOrg(p.organizacionId, (tx) => datosPortal(tx, p.planId, hoy));
   if (!d) return <p>Plan no encontrado.</p>;
-  return <PortalCobros d={d} qrUrl={p.qr ? `/p/${p.token}/qr` : null} datosBancarios={p.banco} accionSubir={accionSubirComprobante.bind(null, p.token)} />;
+  return <PortalCobros d={d} qrUrl={qrUrl} datosBancarios={p.banco} accionSubir={accionSubir} />;
 }

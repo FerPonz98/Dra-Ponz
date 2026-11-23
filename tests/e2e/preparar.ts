@@ -7,6 +7,7 @@ export default async function preparar() {
   await c.connect();
   const patrones = ["Cliente E2E %", "Moroso %", "Estudiante E2E %"];
   for (const p of patrones) {
+    await c.query("delete from propuestas where cliente_id in (select id from clientes where nombre like $1)", [p]);
     await c.query("delete from planes_pago where cliente_id in (select id from clientes where nombre like $1)", [p]);
     await c.query("delete from clientes where nombre like $1", [p]).catch(() => undefined);
   }
