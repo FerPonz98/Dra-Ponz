@@ -59,3 +59,25 @@
 | e2e | ✅ 8/8, incluye **un cliente paga una cuota de punta a punta** (QR → cliente → plan con cuota editada → enlace CI → CI incorrecto → CI correcto → comprobante → aprobación → cuota pagada en el portal) |
 | Revisión manual | ✅ `revisiones/fase-1/`. Se corrigió el editor de cuotas en 375 px (el monto quedaba muy angosto) y las tarjetas de totales (ahora 2×2) |
 | Seguridad | ✅ archivos 404 sin sesión y 200 con sesión del panel (probado en E2E); botón WhatsApp ausente en el portal (E2E); tokens de 256 bits; entradas validadas con Zod en el servidor; `exigirPortal` fuera del archivo `"use server"` para que no sea invocable desde el navegador |
+
+## Fase 2 — Mora, tipo de cambio, recordatorios, plantillas, correos y panel ✅
+
+**Hecho**
+- Motor de mora: gracia, recargo único/mensual, gracia de nueva mora, plazo de la 1.ª cuota, cola y salida de la cola.
+- Job diario idempotente (`/api/jobs/diario`) y job de tipo de cambio BCB (`/api/jobs/tipo-cambio`) con alerta y respaldo.
+  Probado contra el BCB real: 1 BRL = Bs 1,97798 (22/11/2026).
+- "Para recordar hoy" con botón de WhatsApp (wa.me) y mensaje listo; botón también en la ficha del plan.
+- Plantillas editables con variables `{nombre} {monto} {moneda} {fecha} {enlace} {proyecto}` y vista previa.
+- Correos automáticos 3 días antes y el día del vencimiento (Resend/SMTP/archivo).
+- Resumen del panel: cobrado este mes, por cobrar, vencido, planes en cola, comprobantes por aprobar, recordatorios, tipo de cambio.
+
+**Revisión**
+| Paso | Resultado |
+|---|---|
+| typecheck | ✅ 0 errores |
+| lint | ✅ 0 errores, 0 avisos |
+| build | ✅ |
+| test | ✅ 45/45. Mora con fechas simuladas: gracia, paso a cola, recargo único vs mensual, recargo desactivado, plazo de 1.ª cuota, salida de la cola, nueva mora con más días, idempotencia (pura y en BD). Tipo de cambio: parseo real del BCB, conversión, respaldo a la última, alerta, idempotencia. Recordatorios: clasificación y correos una sola vez |
+| e2e | ✅ 12/12: jobs exigen CRON_SECRET, cuota vencida → en cola con recargo → recordatorio con WhatsApp (también 375 px), plantillas editables, sin sesión no hay botón de WhatsApp |
+| Revisión manual | ✅ `revisiones/fase-2/`. Se corrigió una carrera: el aviso "Pago aprobado" desaparecía con la tarjeta; ahora se muestra arriba de la página |
+| Seguridad | ✅ jobs con secreto en tiempo constante; botón WhatsApp solo en páginas del panel (con sesión); validación Zod de plantillas |

@@ -66,3 +66,34 @@ Cuando el prompt no fue explícito se eligió la opción más simple y segura. A
 - **Límite de subida**: Next acepta hasta 52 MB por petición (`serverActions.bodySizeLimit` y
   `proxyClientMaxBodySize`) para dejar margen al multipart; el servidor aplica el límite exacto de 50 MB por archivo.
 - **Plantillas de WhatsApp y botón**: se adelantaron a esta fase porque la ficha del plan las usa (ver Fase 2).
+
+## Fase 2 — Mora, tipo de cambio, recordatorios y panel
+
+- **Motor de mora puro** (`dominio/mora.ts`, con `hoy` inyectable):
+  - `al_dia` → `vencida` (atraso ≤ gracia) → `en_cola` (atraso > gracia; se aplica el recargo) → al pagar, `al_dia`.
+  - Una "mora" empieza cuando el plan pasa de `al_dia` a vencida/cola (`numero_moras` +1). La 1.ª usa `dias_gracia`;
+    las siguientes, `dias_gracia_nueva_mora` (si está vacío, la normal).
+  - **Plazo de la 1.ª cuota**: si el plan lo define, la cuota 1 vence `aceptado_en + X días` y al vencer pasa directo a
+    cola con recargo (el plazo ya es su gracia).
+  - **Recargo** sobre el monto de la cuota (no compuesto). Único: una vez al pasar la gracia. Mensual: uno más cada 30
+    días de atraso pasada la gracia (`floor((atraso − gracia − 1)/30) + 1`). Se eligieron 30 días y no meses de
+    calendario porque es predecible y fácil de explicar al cliente.
+  - Idempotencia: índice único `(cuota_id, numero)` en `recargos` + `ON CONFLICT DO NOTHING`; `numero_moras` solo sube
+    en la transición desde `al_dia`.
+- **Jobs**: endpoints `POST /api/jobs/diario` (mora + recargos + correos + estados de Tesis) y
+  `POST /api/jobs/tipo-cambio`, protegidos con `Authorization: Bearer CRON_SECRET`. Los crons del VPS los llaman con
+  `curl`, así producción no necesita `tsx`.
+- **Tipo de cambio**: se lee la fila `BRL` de la tabla del BCB (primer valor = Bs por 1 real) y se guarda con la fecha del
+  día del job. Si falla: alerta en `alertas_sistema` (visible en el resumen del panel) y los pagos usan la última
+  cotización guardada. La alerta se resuelve sola con la siguiente lectura correcta.
+- **Correos**: 3 días antes y el día del vencimiento, solo si el cliente tiene correo. `recordatorios_enviados` con
+  índice único `(cuota_id, tipo)` garantiza un solo envío aunque el job corra varias veces.
+- **"Para recordar hoy"**: vencen en los próximos 3 días (no solo exactamente a 3), vencen hoy, vencidas en gracia y en
+  cola. Las cuotas con comprobante en revisión no aparecen.
+- **Plantillas**: las 7 plantillas base se siembran por organización; si falta una, se usa la base. Vista previa con
+  datos de ejemplo al editar.
+- **Rate limit del login** configurable con `LOGIN_MAX_POR_MINUTO` (10 por defecto). Los E2E levantan su propio servidor
+  con un valor alto porque hacen muchos logins seguidos.
+- **E2E**: `tests/e2e/preparar.ts` borra al inicio los datos E2E de corridas anteriores (los de la última corrida quedan
+  para las capturas de revisión).
+- **Commits**: se usa la identidad git global del equipo (no se pasa el correo por línea de comandos).
