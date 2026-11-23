@@ -144,3 +144,26 @@ Cuando el prompt no fue explícito se eligió la opción más simple y segura. A
   inicio del cronograma aceptado.
 - **Aceptada → en curso**: si la fecha de inicio del cronograma ya llegó, el proyecto pasa a "en curso" en la siguiente
   sincronización (al abrir la ficha o el portal, o con el job diario).
+
+## Fase 5 — Landing ES/PT editable + SEO
+
+- **Rutas** `/es` y `/pt` (`app/[locale]`, solo esos dos valores; el resto da 404). `/` redirige a `/pt` si el
+  navegador prefiere portugués y a `/es` en cualquier otro caso.
+- **Organización de la landing**: la que tenga `dominio` igual al host (con o sin `www.`); si no coincide, la de
+  `LANDING_ORG_SLUG` (`dra-ponz`). Así otro cliente con Tesis podría tener su propia landing en su dominio.
+- **Contenido** en `landing_contenido` (organización, idioma, clave, valor). Cada sección tiene claves de texto, listas
+  (una línea por ítem) o pares (`a | b` por línea). Si una clave no está guardada se usa el texto inicial. El seed carga
+  ES y PT sin pisar lo editado. **Testimonios vacíos**: la sección no se muestra hasta que la Dra. cargue alguno.
+- **next-intl** solo para los textos fijos de la interfaz (botones de WhatsApp, selector, alt de la foto); los textos de
+  las secciones vienen de la base.
+- **`<html lang>`**: el layout raíz es único (`lang="es"`); la versión PT envuelve todo el contenido en `lang="pt"`. Se
+  evitó reestructurar todas las rutas en dos layouts raíz. Lighthouse SEO y accesibilidad = 100 en ambos idiomas.
+- **Foto**: si existe `public/landing/foto-dra.webp` se usa; si no, un placeholder SVG con texto alternativo.
+- **WhatsApp**: número de la organización (Panel → Organización) o `WHATSAPP_LANDING`. Botón arriba, en la sección
+  "¿Te pasa esto?", en "Pago en cuotas" (mitad), al final y fijo abajo en el celular.
+- **Rendimiento**: la landing es 100 % server components (sin JS propio), fuentes del sistema, sin imágenes pesadas.
+  `htmlLimitedBots: /.*/` para que los metadatos vayan siempre en el `<head>` (sin streaming): Lighthouse marcaba
+  "sin meta description" en una corrida y lo mismo les pasa a algunas redes sociales.
+- **SEO**: título y descripción editables, canonical, `hreflang` es/pt/x-default, Open Graph y Twitter, imagen OG
+  generada, `sitemap.xml` con alternos, `robots.txt` (bloquea panel, portal, api y login), JSON-LD `ProfessionalService`.
+- **Lighthouse**: `npm run lighthouse` usa el CLI (el API dentro de `tsx` falla por `__name`) con el Chromium de Playwright.

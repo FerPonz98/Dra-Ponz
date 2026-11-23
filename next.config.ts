@@ -6,6 +6,8 @@ const withNextIntl = createNextIntlPlugin("./src/lib/i18n/request.ts");
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
+  // Metadatos (SEO/Open Graph) siempre en el <head>, sin streaming, para cualquier cliente.
+  htmlLimitedBots: /.*/,
   turbopack: {
     rules: {
       "*.css": { loaders: ["@tailwindcss/turbopack"], as: "*.css" },

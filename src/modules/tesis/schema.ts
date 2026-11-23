@@ -201,3 +201,17 @@ export const historialPropuesta = pgTable(
   },
   (t) => [index("historial_propuesta_idx").on(t.propuestaId, t.creadoEn)],
 );
+
+// Textos de la landing pública, editables desde el panel, por idioma.
+export const landingContenido = pgTable(
+  "landing_contenido",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizacionId: org(),
+    idioma: text("idioma").$type<"es" | "pt">().notNull(),
+    clave: text("clave").notNull(),
+    valor: text("valor").notNull(),
+    actualizadoEn: timestamp("actualizado_en", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("landing_org_idioma_clave_uq").on(t.organizacionId, t.idioma, t.clave)],
+);

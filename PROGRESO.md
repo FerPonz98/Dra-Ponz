@@ -125,3 +125,22 @@
 | e2e | ✅ 15/15, incluye **E2E del estudiante completo** (formulario creado → propuesta → aceptar → pagar → aprobación → formulario con archivos → 51 MB rechazado → ZIP subido → descarga solo con sesión → pide 3.ª revisión y diapositivas → Dra. marca actividades (22 %) y aprueba → estudiante ve avance → calendario mes/semana) |
 | Revisión manual | ✅ `revisiones/fase-4/` incluye el portal con sesión a 375 px (`portal-estudiante-con-sesion-movil.png`), sin desborde horizontal |
 | Seguridad | ✅ archivos del portal 200 con sesión / 404 sin ella (E2E); magic bytes; prevalidación antes de escribir; acciones del portal atadas a la propuesta del enlace |
+
+## Fase 5 — Landing ES/PT editable + SEO ✅
+
+**Hecho**
+- Landing pública `/es` y `/pt` con las 11 secciones y los textos iniciales del prompt (sin testimonios inventados).
+- Botón de WhatsApp "Quiero un diagnóstico de mi tesis" / "Quero um diagnóstico da minha tese" arriba, a la mitad, al
+  final y fijo en el celular.
+- Editor en el panel (Tesis → Landing pública) por idioma, para todas las secciones y el SEO.
+- SEO: metadatos, OG/Twitter, imagen OG, sitemap, robots, hreflang, JSON-LD.
+
+**Revisión**
+| Paso | Resultado |
+|---|---|
+| typecheck / lint / build | ✅ 0 errores / 0 avisos / ok |
+| test | ✅ 54/54 |
+| e2e | ✅ 20/20 (+5): secciones y 4 CTA, PT y selector, CTA fijo en 375 px, sitemap/robots/OG, raíz según idioma, edición desde el panel reflejada en la landing, testimonios solo si existen |
+| **Lighthouse (móvil)** | ✅ `/es`: rendimiento **99**, accesibilidad **100**, buenas prácticas **100**, SEO **100** · `/pt`: **96 / 100 / 100 / 100** (informes en `lighthouse/`) |
+| Revisión manual | ✅ `revisiones/fase-5/` (el CTA fijo aparece en medio de la captura de página completa por cómo se toman; en pantalla queda abajo) |
+| Seguridad | ✅ la landing no expone datos privados; el botón de WhatsApp de la landing es el contacto público de la Dra. (los botones de recordatorio siguen solo en el panel) |
