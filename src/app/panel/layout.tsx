@@ -3,6 +3,9 @@ import { cookies } from "next/headers";
 import { requerirOrganizacion } from "@/core/contexto";
 import type { CodigoModulo } from "@/core/db/schema";
 import type { Permiso } from "@/core/permisos";
+import { MarcaOrganizacion } from "@/components/marca/marca";
+import { EstiloTema } from "@/components/tema/estilo-tema";
+import { temaDeOrganizacion } from "@/core/tema/cache";
 import { ShellPanel, type GrupoNav, type ItemNav } from "@/components/panel/shell";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -32,7 +35,8 @@ const GRUPOS: { titulo: string; items: Item[] }[] = [
   {
     titulo: "Configuración",
     items: [
-      { href: "/panel/configuracion", etiqueta: "Organización", icono: "organizacion", permiso: "organizacion:configurar" },
+      { href: "/panel/configuracion", etiqueta: "Organización", icono: "organizacion", permiso: "organizacion:configurar", exacto: true },
+      { href: "/panel/configuracion/apariencia", etiqueta: "Apariencia", icono: "apariencia", permiso: "organizacion:configurar" },
       { href: "/panel/usuarios", etiqueta: "Usuarios y roles", icono: "usuarios", permiso: "usuarios:gestionar" },
     ],
   },
@@ -47,9 +51,17 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   const preferidos = ["/panel", "/panel/cobros/clientes", "/panel/cobros/recordatorios", "/panel/tesis/propuestas", "/panel/cobros/planes"];
   const inferior = preferidos.map((h) => todos.find((i) => i.href === h)).filter((x): x is ItemNav => !!x).slice(0, 4).map((i) => ({ ...i, etiqueta: CORTO[i.href] ?? i.etiqueta }));
 
+  // El panel mantiene el diseño de la plataforma; del tema solo toma el color primario para acentos.
+  const tema = await temaDeOrganizacion(ctx.organizacion.id);
   return (
+    <>
+    {tema && <EstiloTema tema={tema} alcance="panel" id={ctx.organizacion.id} />}
     <ShellPanel
-      organizacion={{ nombre: ctx.organizacion.nombre, zona: ctx.organizacion.zonaHoraria }}
+      organizacion={{
+        nombre: ctx.organizacion.nombre,
+        zona: ctx.organizacion.zonaHoraria,
+        simbolo: <MarcaOrganizacion org={ctx.organizacion} cual="isotipo" className="size-8" claseInicial="size-8 text-sm shadow-sm" />,
+      }}
       usuario={{ nombre: ctx.usuario.nombre, correo: ctx.usuario.correo }}
       grupos={grupos}
       inferior={inferior}
@@ -58,6 +70,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
     >
       {children}
     </ShellPanel>
+    </>
   );
 }
 

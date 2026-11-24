@@ -1,5 +1,10 @@
 import { LinkIcon, Lock } from "lucide-react";
 import type { Metadata } from "next";
+import { MarcaOrganizacion } from "@/components/marca/marca";
+import { clasesFuentes } from "@/components/tema/fuentes";
+import type { OrgMarca } from "@/core/marca/marca";
+import { EstiloTema } from "@/components/tema/estilo-tema";
+import { temaDeOrganizacion } from "@/core/tema/cache";
 import { withOrg } from "@/lib/db";
 import { hoyEnZona } from "@/lib/fechas";
 import { PortalCobros } from "@/modules/cobros/componentes/portal-cobros";
@@ -13,20 +18,14 @@ import { extrasPortalTesis } from "./extras-tesis";
 
 export const metadata: Metadata = { title: "Mi portal", robots: { index: false, follow: false }, referrer: "no-referrer" };
 
-function Encabezado({ nombre, color, logo }: { nombre: string; color: string; logo: string | null }) {
+function Encabezado({ org }: { org: OrgMarca }) {
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-surface/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-xl items-center gap-3 px-4">
-        {logo ? (
-          // eslint-disable-next-line @next/next/no-img-element -- logo privado de la organización
-          <img src={logo} alt="" className="size-9 rounded-xl border border-border bg-white object-contain" />
-        ) : (
-          <span className="flex size-9 items-center justify-center rounded-xl text-sm font-bold text-white shadow-sm" style={{ background: color }} aria-hidden>
-            {nombre.replace(/^Dra?\.\s*/i, "").trim()[0]?.toUpperCase()}
-          </span>
-        )}
+        {/* Marca de la organización: isotipo subido, el incorporado (con los colores del tema) o la inicial */}
+        <MarcaOrganizacion org={org} cual="isotipo" className="size-10" claseInicial="size-9 rounded-xl text-sm shadow-sm" />
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold leading-tight">{nombre}</p>
+          <p className="truncate text-sm font-semibold leading-tight">{org.nombre}</p>
           <p className="flex items-center gap-1 text-xs text-muted-foreground">
             <Lock className="size-3" aria-hidden /> Portal privado
           </p>
@@ -54,9 +53,12 @@ export default async function PortalPage(props: { params: Promise<{ token: strin
     );
   }
   const org = resuelto.organizacion;
+  // Tema de la marca: colores, fuentes y bordes elegidos en Configuración → Apariencia (si los eligió).
+  const tema = await temaDeOrganizacion(org.id);
   return (
-    <div className="flex min-h-screen flex-1 flex-col bg-background">
-      <Encabezado nombre={org.nombre} color={org.colorPrimario} logo={org.logoArchivoId ? `/p/${token}/logo` : null} />
+    <div className={`flex min-h-screen flex-1 flex-col bg-background ${tema ? `portal-tema tema-fuentes font-texto ${clasesFuentes(tema)}` : ""}`}>
+      {tema && <EstiloTema tema={tema} alcance="portal" id={org.id} />}
+      <Encabezado org={org} />
       <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-16 pt-6">
         {!autorizado ? (
           <AccesoPortal token={token} metodo={resuelto.enlace.metodo} organizacion={org.nombre} />

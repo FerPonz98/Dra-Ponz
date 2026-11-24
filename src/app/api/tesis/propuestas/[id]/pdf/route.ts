@@ -1,3 +1,4 @@
+import { marcaParaPdf } from "@/core/marca/servidor";
 import { obtenerContexto } from "@/core/contexto";
 import { withOrg } from "@/lib/db";
 import { generarPdfPropuesta, nombreArchivoPdf } from "@/modules/tesis/pdf/propuesta-pdf";
@@ -11,7 +12,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   if (!/^[0-9a-f-]{36}$/i.test(id)) return new Response("No encontrado", { status: 404 });
   const p = await withOrg(c.organizacion.id, (tx) => obtenerProyecto(tx, id));
   if (!p) return new Response("No encontrado", { status: 404 });
-  const pdf = await generarPdfPropuesta(p, c.organizacion.nombre);
+  const pdf = await generarPdfPropuesta(p, await marcaParaPdf(c.organizacion.id));
   return new Response(new Uint8Array(pdf), {
     headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${nombreArchivoPdf(p)}"`, "Cache-Control": "private, no-store" },
   });

@@ -14,6 +14,7 @@ import {
   Menu as IconoMenu,
   MessageSquareText,
   Moon,
+  Palette,
   Receipt,
   Search,
   Settings,
@@ -45,6 +46,7 @@ export const ICONOS = {
   formularios: FileStack,
   landing: Globe,
   organizacion: Settings,
+  apariencia: Palette,
   usuarios: UsersRound,
   documento: FileText,
 } satisfies Record<string, LucideIcon>;
@@ -61,11 +63,12 @@ function escribirCookie(nombre: string, valor: string) {
   document.cookie = `${nombre}=${valor}; path=/; max-age=31536000; samesite=lax`;
 }
 
-function Marca({ nombre, colapsado }: { nombre: string; colapsado?: boolean }) {
+function Marca({ nombre, simbolo, colapsado }: { nombre: string; simbolo: React.ReactNode; colapsado?: boolean }) {
   return (
     <div className="flex min-w-0 items-center gap-2.5">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground shadow-sm" aria-hidden>
-        {nombre.replace(/^(Dra?\.|Lic\.)\s*/i, "").trim()[0]?.toUpperCase() ?? "C"}
+      {/* Isotipo de la organización (subido, incorporado o la inicial), resuelto en el servidor */}
+      <span className="flex size-8 shrink-0 items-center justify-center" aria-hidden>
+        {simbolo}
       </span>
       {!colapsado && (
         <span className="min-w-0">
@@ -126,7 +129,7 @@ export function ShellPanel({
   oscuroInicial,
   children,
 }: {
-  organizacion: { nombre: string; zona: string };
+  organizacion: { nombre: string; zona: string; simbolo: React.ReactNode };
   usuario: { nombre: string; correo: string };
   grupos: GrupoNav[];
   inferior: ItemNav[];
@@ -167,7 +170,7 @@ export function ShellPanel({
       {/* Barra lateral (escritorio) */}
       <aside className={cn("sticky top-0 hidden h-screen shrink-0 flex-col border-r border-border bg-surface transition-[width] duration-200 lg:flex", colapsado ? "w-[72px]" : "w-64")}>
         <div className={cn("flex h-16 items-center border-b border-border px-4", colapsado && "justify-center px-0")}>
-          <Marca nombre={organizacion.nombre} colapsado={colapsado} />
+          <Marca nombre={organizacion.nombre} simbolo={organizacion.simbolo} colapsado={colapsado} />
         </div>
         <div className={cn("flex-1 overflow-y-auto py-4", colapsado ? "px-2" : "px-3")}>
           <Navegacion grupos={grupos} colapsado={colapsado} />
@@ -195,7 +198,7 @@ export function ShellPanel({
           <button className="absolute inset-0 bg-stone-950/40 backdrop-blur-[2px]" aria-label="Cerrar menú" onClick={() => setDrawer(false)} />
           <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col bg-surface shadow-lg animate-[aparecer_.2s_ease-out]">
             <div className="flex h-16 items-center justify-between border-b border-border px-4">
-              <Marca nombre={organizacion.nombre} />
+              <Marca nombre={organizacion.nombre} simbolo={organizacion.simbolo} />
               <Button variant="ghost" size="icon-sm" aria-label="Cerrar menú" onClick={() => setDrawer(false)}>
                 <X />
               </Button>

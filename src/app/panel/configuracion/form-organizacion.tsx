@@ -1,4 +1,6 @@
 "use client";
+import { Palette } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -6,9 +8,9 @@ import { Campo, Input, Select, Textarea } from "@/components/ui/input";
 import { notificar } from "@/components/ui/toaster";
 import { accionGuardarOrganizacion } from "./acciones";
 
-type Inicial = { nombre: string; colorPrimario: string; colorSecundario: string; datosBancarios: string; monedaDefecto: "BOB" | "BRL"; whatsapp: string; dominio: string };
+type Inicial = { nombre: string; datosBancarios: string; monedaDefecto: "BOB" | "BRL"; whatsapp: string; dominio: string };
 
-export function FormOrganizacion({ inicial, qrId, logoId }: { inicial: Inicial; qrId: string | null; logoId: string | null }) {
+export function FormOrganizacion({ inicial, qrId }: { inicial: Inicial; qrId: string | null }) {
   const router = useRouter();
   const [estado, accion, pendiente] = useActionState(accionGuardarOrganizacion, null);
   useEffect(() => {
@@ -24,12 +26,13 @@ export function FormOrganizacion({ inicial, qrId, logoId }: { inicial: Inicial; 
       <Campo etiqueta="WhatsApp del negocio" htmlFor="o-wa" ayuda="Con código de país, solo números">
         <Input id="o-wa" name="whatsapp" defaultValue={inicial.whatsapp} inputMode="tel" />
       </Campo>
-      <Campo etiqueta="Color principal" htmlFor="o-c1">
-        <Input id="o-c1" name="colorPrimario" type="color" defaultValue={inicial.colorPrimario} />
-      </Campo>
-      <Campo etiqueta="Color secundario" htmlFor="o-c2">
-        <Input id="o-c2" name="colorSecundario" type="color" defaultValue={inicial.colorSecundario} />
-      </Campo>
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-2 p-3 text-sm md:col-span-2">
+        <Palette className="size-5 shrink-0 text-primary" aria-hidden />
+        <p className="flex-1 text-muted-foreground">El logo, los colores, las fuentes y los bordes de tu landing y del portal se eligen en Apariencia, con vista previa y revisión de contraste.</p>
+        <Link href="/panel/configuracion/apariencia" className="shrink-0 font-medium text-primary hover:underline">
+          Ir a Apariencia
+        </Link>
+      </div>
       <Campo etiqueta="Moneda por defecto" htmlFor="o-mon">
         <Select id="o-mon" name="monedaDefecto" defaultValue={inicial.monedaDefecto}>
           <option value="BOB">BOB</option>
@@ -46,9 +49,6 @@ export function FormOrganizacion({ inicial, qrId, logoId }: { inicial: Inicial; 
       </div>
       <Campo etiqueta="Imagen del QR estático de cobro" htmlFor="o-qr" ayuda={qrId ? "Ya hay un QR cargado; sube otro para reemplazarlo." : "PNG, JPG o WEBP"}>
         <Input id="o-qr" name="qr" type="file" accept=".png,.jpg,.jpeg,.webp" />
-      </Campo>
-      <Campo etiqueta="Logo" htmlFor="o-logo" ayuda={logoId ? "Ya hay un logo cargado." : "PNG, JPG o WEBP"}>
-        <Input id="o-logo" name="logo" type="file" accept=".png,.jpg,.jpeg,.webp" />
       </Campo>
       {qrId && (
         // eslint-disable-next-line @next/next/no-img-element -- imagen privada servida por ruta autenticada

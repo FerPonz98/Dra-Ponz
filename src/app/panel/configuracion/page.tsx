@@ -11,7 +11,7 @@ export default async function ConfiguracionPage() {
   const o = ctx.organizacion;
   return (
     <div className="mx-auto max-w-4xl">
-      <EncabezadoPagina titulo="Organización" descripcion="Datos de tu negocio, colores y lo que ven tus clientes al pagar." />
+      <EncabezadoPagina titulo="Organización" descripcion="Datos de tu negocio y lo que ven tus clientes al pagar." />
       <Card>
         <CardHeader>
           <CardTitle>Datos, marca y cobro</CardTitle>
@@ -21,15 +21,12 @@ export default async function ConfiguracionPage() {
           <FormOrganizacion
             inicial={{
               nombre: o.nombre,
-              colorPrimario: o.colorPrimario,
-              colorSecundario: o.colorSecundario,
               datosBancarios: o.datosBancarios ?? "",
               monedaDefecto: o.monedaDefecto as "BOB" | "BRL",
               whatsapp: o.whatsapp ?? "",
               dominio: o.dominio ?? "",
             }}
             qrId={o.qrArchivoId}
-            logoId={o.logoArchivoId}
           />
         </CardContent>
       </Card>

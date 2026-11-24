@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Monograma JP de Julieta Ponz">
+<title>Julieta Ponz — monograma JP</title>
+<!-- Paths are editable vector shapes. Transparent background. -->
+<g fill="#1E4D5C">
+<!-- J, elegant serif with descender -->
+<path d="M85 73 H211 V84 C193 85 185 92 185 108 V277 C185 330 164 352 126 352 C98 352 81 338 82 320 C83 307 94 299 106 303 C114 306 120 316 115 327 C111 334 109 337 117 340 C134 345 145 330 145 299 V108 C145 91 135 84 85 84 Z"/>
+<!-- P, serif stem and bowl -->
+<path d="M191 118 H268 C326 118 352 143 352 180 C352 218 323 239 270 239 H246 V298 C246 312 256 316 271 317 V327 H191 V317 C208 316 216 312 216 298 V146 C216 134 208 129 191 128 Z M246 132 V225 H266 C299 225 316 209 316 179 C316 150 299 132 266 132 Z" fill-rule="evenodd"/>
+</g>
+<!-- Gold flourish crossing letterforms -->
+<path d="M53 256 C99 278 128 226 163 203 C199 180 222 168 259 188 C225 184 202 204 175 232 C137 271 90 294 53 256 Z" fill="#C59A4A"/>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Isotipo geométrico de Julieta Ponz">
+<title>Julieta Ponz — símbolo geométrico</title>
+<!-- Editable vector, transparent background, two flat brand colors -->
+<path fill="#1E4D5C" d="M65 65 H175 C212 65 237 93 237 143 V184 H65 Z"/>
+<path fill="#C59A4A" d="M239 65 H295 C329 65 349 87 349 120 V184 H239 Z"/>
+<path fill="#1E4D5C" d="M65 186 H349 V335 H232 C232 276 274 232 349 204 C229 210 163 268 141 335 H65 Z"/>
+<!-- The cream curved crossing negative-space band is a punched-out shape -->
+<path fill="#F7F2E8" d="M65 335 C84 260 129 216 199 197 C256 181 302 188 349 185 V217 C273 218 235 247 214 287 C205 305 198 321 194 335 Z"/>
+</svg>
