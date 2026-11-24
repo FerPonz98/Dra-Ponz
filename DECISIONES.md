@@ -256,3 +256,9 @@ Cuando el prompt no fue explícito se eligió la opción más simple y segura. A
   y copia externa con rclone configurado por variables. Restauración probada en local.
 - **Validación del entorno con Zod al arrancar** (`src/lib/entorno.ts`): si falta algo, el proceso termina con código 1
   y el log dice qué variable o carpeta falta.
+- **Imagen Debian (`node:22-bookworm-slim`, glibc) y no Alpine**: el lockfile generado en Windows no traía los binarios
+  nativos de Linux (npm/cli#4828) y el build fallaba con `@tailwindcss/oxide-linux-x64-musl`. Ahora los binarios
+  `*-linux-{x64,arm64}-gnu` de oxide, lightningcss, SWC de Next y sharp están en `optionalDependencies` con la versión
+  exacta (así quedan en el lockfile), y `scripts/docker/nativos-linux.mjs` instala los que falten después de `npm ci`.
+  Al actualizar Next, Tailwind o sharp, actualiza también esas versiones. `sharp` pasó a ser dependencia explícita
+  (lo usa `next/image` en producción).
