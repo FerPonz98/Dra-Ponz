@@ -26,6 +26,9 @@ test.describe("Fase 5 · landing ES/PT editable + SEO", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Sua tese, da ideia à defesa, com quem sabe o que a banca vai observar.");
     await expect(page.getByTestId("cta-whatsapp").first()).toHaveText(/Quero um diagnóstico da minha tese/);
     if (info.project.name === "celular") {
+      // El botón flotante aparece después de la portada.
+      await expect(page.getByTestId("cta-fijo")).toBeHidden();
+      await page.mouse.wheel(0, 1400);
       await expect(page.getByTestId("cta-fijo")).toBeVisible();
       await expect(page.getByTestId("cta-fijo")).toHaveText(/Fale comigo pelo WhatsApp/);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);

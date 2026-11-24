@@ -3,7 +3,9 @@ import "dotenv/config";
 import { eq } from "drizzle-orm";
 import { organizaciones, usuarios } from "@/core/db/schema";
 import { crearOrganizacion, crearUsuario } from "@/core/servicios";
-import { cerrarPools, dbAdmin, withAdmin } from "@/lib/db";
+import { sembrarTema } from "@/core/tema/servicio";
+import { TEMA_POR_DEFECTO } from "@/core/tema/tema";
+import { cerrarPools, dbAdmin, withAdmin, withOrg } from "@/lib/db";
 import { sembrarModulos } from "./seed-modulos";
 
 function req(n: string, defecto?: string) {
@@ -48,7 +50,9 @@ async function main() {
       console.log(`Organización creada: ${o.nombre}`);
     }
     if (o.slug === "dra-ponz") {
-      await db.update(organizaciones).set({ whatsapp: process.env.WHATSAPP_LANDING ?? null, colorPrimario: "#7c2d5b" }).where(eq(organizaciones.id, org.id));
+      await db.update(organizaciones).set({ whatsapp: process.env.WHATSAPP_LANDING ?? null, colorPrimario: TEMA_POR_DEFECTO.colorPrimario, colorSecundario: TEMA_POR_DEFECTO.colorSecundario }).where(eq(organizaciones.id, org.id));
+      // Tema de la landing y el portal: los colores actuales de la Dra. (sin pisar uno ya elegido).
+      await withOrg(org.id, (tx) => sembrarTema(tx, org.id));
     }
     await sembrarModulos(org.id, [...o.modulos]);
   }

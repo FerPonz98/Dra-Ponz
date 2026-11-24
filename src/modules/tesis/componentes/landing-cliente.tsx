@@ -1,10 +1,31 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 
-/** Activa la aparición al hacer scroll (.revelar) solo si hay JS y el usuario no pidió menos movimiento. */
+/**
+ * Activa la aparición al hacer scroll (.revelar) solo si hay JS (sin JS todo se ve). Con movimiento
+ * reducido el CSS deja solo el fundido. También da scroll suave a los enlaces internos (#sección).
+ */
 export function Revelador() {
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+    const reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const alClic = (e: MouseEvent) => {
+      const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[href^="#"]');
+      if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey) return;
+      const id = decodeURIComponent(a.hash.slice(1));
+      const destino = id && document.getElementById(id);
+      if (!destino) return;
+      e.preventDefault();
+      destino.scrollIntoView({ behavior: reducido ? "auto" : "smooth", block: "start" });
+      history.pushState(null, "", `#${id}`);
+      if (!destino.hasAttribute("tabindex")) destino.setAttribute("tabindex", "-1");
+      destino.focus({ preventScroll: true });
+    };
+    document.addEventListener("click", alClic);
+    return () => document.removeEventListener("click", alClic);
+  }, []);
+
+  useEffect(() => {
+    if (!("IntersectionObserver" in window)) return;
     const raiz = document.documentElement;
     const elementos = Array.from(document.querySelectorAll<HTMLElement>(".revelar"));
     const fueraDeVista = elementos.filter((el) => el.getBoundingClientRect().top > window.innerHeight * 0.9);
@@ -60,7 +81,7 @@ export function Contador({ texto }: { texto: string }) {
 
   if (!m) return <span>{texto}</span>;
   return (
-    <span ref={ref}>
+    <span ref={ref} className="tabular-nums">
       <span className="sr-only">{texto}</span>
       <span aria-hidden>
         {m[1]}

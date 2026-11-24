@@ -38,15 +38,36 @@
   --color-whatsapp-hover: var(--whatsapp-hover);
   --color-marca: var(--marca);
 
-  /* Landing */
-  --color-petroleo: #0e4a55;
-  --color-petroleo-oscuro: #0a3640;
-  --color-petroleo-claro: #e3eff0;
-  --color-dorado: #b8873b;
-  --color-dorado-oscuro: #835d1f;
-  --color-crema: #faf6ee;
-  --color-crema-2: #f3ecdf;
-  --color-tinta: #1d2a2e;
+  /* Tema de la organización (landing y portal): variables generadas en el servidor desde la BD
+     (src/core/tema/tema.ts → <style> en el <head>). Clases: bg-tema-primario, text-tema-titulo, … */
+  --color-tema-primario: var(--color-primario);
+  --color-tema-primario-hover: var(--color-primario-hover);
+  --color-tema-primario-suave: var(--color-primario-suave);
+  --color-tema-primario-borde: var(--color-primario-borde);
+  --color-tema-primario-texto: var(--color-primario-texto);
+  --color-tema-sobre-primario: var(--color-sobre-primario);
+  --color-tema-secundario: var(--color-secundario);
+  --color-tema-secundario-suave: var(--color-secundario-suave);
+  --color-tema-sobre-secundario: var(--color-sobre-secundario);
+  --color-tema-sobre-secundario-suave: var(--color-sobre-secundario-suave);
+  --color-tema-titulo: var(--color-titulo);
+  --color-tema-acento: var(--color-acento);
+  --color-tema-acento-suave: var(--color-acento-suave);
+  --color-tema-acento-fuerte: var(--color-acento-fuerte);
+  --color-tema-acento-texto: var(--color-acento-texto);
+  --color-tema-acento-sobre-secundario: var(--color-acento-sobre-secundario);
+  --color-tema-fondo: var(--color-fondo);
+  --color-tema-fondo-2: var(--color-fondo-2);
+  --color-tema-superficie: var(--color-superficie);
+  --color-tema-texto: var(--color-texto);
+  --color-tema-texto-suave: var(--color-texto-suave);
+  --color-tema-borde: var(--color-borde);
+  --color-tema-borde-fuerte: var(--color-borde-fuerte);
+  --radius-boton: var(--radio-boton);
+  --radius-tarjeta: var(--radio-tarjeta);
+  --radius-bloque: var(--radio-bloque);
+  --font-titulos: var(--fuente-titulos);
+  --font-texto: var(--fuente-texto);
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-serif: var(--font-fraunces), ui-serif, Georgia, "Times New Roman", serif;
@@ -175,31 +196,346 @@
   }
 }
 
-/* Aparición al hacer scroll (landing). Sin JS o con movimiento reducido: visible siempre. */
-.revelar {
-  opacity: 1;
-}
-.js-animar .revelar:not(.visible) {
-  opacity: 0;
-  transform: translateY(16px);
-}
-.js-animar .revelar {
-  transition:
-    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-}
+/* Movimiento reducido: la plataforma (panel/portal) sin animaciones. La landing tiene su propia
+   regla más abajo (solo fundidos, sin desplazamientos). */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  :where(:not(.landing, .landing *)),
+  :where(:not(.landing *))::before,
+  :where(:not(.landing *))::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  .js-animar .revelar:not(.visible) {
+}
+
+/* ───────────────────────── Landing: movimiento ─────────────────────────
+   Reglas: solo transform y opacity, 200–700 ms, easing suave, una sola vez al hacer scroll.
+   --desplazar es la distancia de las entradas; con prefers-reduced-motion vale 0 (solo fundido). */
+.landing {
+  --facil: cubic-bezier(0.22, 1, 0.36, 1);
+  --desplazar: 20px;
+  interpolate-size: allow-keywords;
+}
+.landing section[id] {
+  scroll-margin-top: 4.5rem;
+}
+
+/* Aparición al hacer scroll. Sin JS: visible siempre. Escalonado con --retraso. */
+.revelar {
+  opacity: 1;
+}
+.js-animar .revelar:not(.visible) {
+  opacity: 0;
+  transform: translate3d(var(--desde-x, 0px), var(--desplazar), 0);
+}
+.js-animar .revelar {
+  transition:
+    opacity 0.65s var(--facil) var(--retraso, 0ms),
+    transform 0.65s var(--facil) var(--retraso, 0ms);
+}
+@media (min-width: 768px) {
+  .js-animar .revelar-izq:not(.visible) {
+    --desde-x: -24px;
+    --desplazar: 0px;
+  }
+  .js-animar .revelar-der:not(.visible) {
+    --desde-x: 24px;
+    --desplazar: 0px;
+  }
+}
+
+/* Entrada de la portada (CSS puro: funciona sin JS y no espera a la hidratación). */
+@keyframes entrar {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--desplazar), 0);
+  }
+  to {
     opacity: 1;
     transform: none;
+  }
+}
+@keyframes entrar-escala {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.entrar {
+  animation: entrar 0.6s var(--facil) var(--retraso, 0ms) both;
+}
+/* Palabras del título: parten de opacidad 0.01 (a la vista es un fundido completo), así el navegador
+   registra el título como pintado desde el primer cuadro y la animación no retrasa el LCP. */
+@keyframes entrar-palabra {
+  from {
+    opacity: 0.01;
+    transform: translate3d(0, var(--desplazar), 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.entrar-palabra {
+  display: inline-block;
+  animation: entrar-palabra 0.55s var(--facil) var(--retraso, 0ms) both;
+}
+.entrar-foto {
+  animation: entrar-escala 0.7s var(--facil) 0.1s both;
+}
+
+/* Fondos vivos: manchas difuminadas con los colores del tema que se mueven muy despacio. */
+@keyframes deriva-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-8%, 6%, 0) scale(1.12);
+  }
+}
+@keyframes deriva-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+  to {
+    transform: translate3d(10%, -8%, 0) scale(0.92);
+  }
+}
+/* Degradado radial con currentColor (sin filter: blur, que es caro de pintar en el celular). */
+.mancha {
+  position: absolute;
+  border-radius: 9999px;
+  background-image: radial-gradient(closest-side, currentColor, transparent);
+  will-change: transform;
+  pointer-events: none;
+}
+.mancha-a {
+  animation: deriva-a 18s ease-in-out infinite alternate;
+}
+.mancha-b {
+  animation: deriva-b 22s ease-in-out infinite alternate;
+}
+
+/* Marco de la foto que flota apenas. */
+@keyframes flotar {
+  from {
+    transform: translate3d(1rem, 1rem, 0);
+  }
+  to {
+    transform: translate3d(0.6rem, 0.4rem, 0);
+  }
+}
+.flotar {
+  transform: translate3d(1rem, 1rem, 0);
+  animation: flotar 5s ease-in-out infinite alternate;
+}
+
+/* Botones y enlaces: micro-interacciones (hover y press). */
+.boton-vivo {
+  transition:
+    transform 0.2s var(--facil, ease),
+    opacity 0.2s ease,
+    background-color 0.2s ease;
+}
+.boton-vivo:hover {
+  transform: translateY(-2px);
+}
+.boton-vivo:active {
+  transform: translateY(0) scale(0.97);
+}
+.enlace-vivo {
+  position: relative;
+}
+.enlace-vivo::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -4px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s var(--facil);
+}
+.enlace-vivo:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Brillo que cruza el botón de WhatsApp cada pocos segundos. */
+@keyframes brillo {
+  0%,
+  72% {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(320%) skewX(-20deg);
+  }
+}
+.brillo {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.brillo::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 35%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.28), transparent);
+  z-index: -1;
+  animation: brillo 5s ease-in-out 2s infinite;
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+
+/* Pulso suave alrededor del botón flotante. */
+@keyframes pulso {
+  0% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.12, 1.35);
+  }
+}
+.pulso::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--color-primario);
+  animation: pulso 3.2s ease-out 1s infinite;
+  pointer-events: none;
+}
+
+/* Micro-rebote al hover (botón del cierre). */
+@keyframes rebote {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  35% {
+    transform: translateY(-4px) scale(1.04);
+  }
+  65% {
+    transform: translateY(0) scale(0.985);
+  }
+  100% {
+    transform: translateY(-2px) scale(1);
+  }
+}
+.rebote:hover {
+  animation: rebote 0.5s var(--facil) both;
+}
+
+/* Tarjetas que se elevan con sombra (la sombra vive en ::after y solo cambia su opacidad). */
+.elevable {
+  position: relative;
+  transition: transform 0.35s var(--facil);
+}
+.elevable::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  box-shadow: 0 18px 40px -16px color-mix(in srgb, var(--color-secundario) 30%, transparent);
+  opacity: 0;
+  transition: opacity 0.35s var(--facil);
+  pointer-events: none;
+}
+.elevable:hover {
+  transform: translateY(-4px);
+}
+.elevable:hover::after {
+  opacity: 1;
+}
+
+/* Ícono de servicio que se anima al hover. */
+@keyframes balanceo {
+  0% {
+    transform: rotate(0) scale(1);
+  }
+  30% {
+    transform: rotate(-10deg) scale(1.1);
+  }
+  60% {
+    transform: rotate(8deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(0) scale(1.06);
+  }
+}
+.group:hover .icono-vivo {
+  animation: balanceo 0.6s var(--facil) both;
+}
+
+/* Preguntas frecuentes: <details> con animación de altura (navegadores modernos) y fundido. */
+.faq::details-content {
+  block-size: 0;
+  overflow: clip;
+  transition:
+    block-size 0.35s var(--facil),
+    content-visibility 0.35s allow-discrete;
+}
+.faq[open]::details-content {
+  block-size: auto;
+}
+.faq .respuesta {
+  opacity: 0;
+  transition: opacity 0.35s ease 0.05s;
+}
+.faq[open] .respuesta {
+  opacity: 1;
+}
+
+/* En el celular, versiones más livianas: sin deriva de fondos ni brillo continuo. */
+@media (max-width: 767px) {
+  .mancha-a,
+  .mancha-b {
+    animation: none;
+  }
+}
+
+/* Movimiento reducido en la landing: sin desplazamientos ni animaciones continuas; solo fundidos. */
+@media (prefers-reduced-motion: reduce) {
+  .landing {
+    --desplazar: 0px;
+  }
+  .landing .js-animar .revelar:not(.visible),
+  .js-animar .landing .revelar:not(.visible) {
+    --desde-x: 0px;
+    --desplazar: 0px;
+  }
+  .landing .entrar-foto {
+    animation-name: entrar;
+  }
+  .landing .mancha-a,
+  .landing .mancha-b,
+  .landing .flotar,
+  .landing .brillo::after,
+  .landing .pulso::before,
+  .landing .rebote:hover,
+  .landing .group:hover .icono-vivo {
+    animation: none;
+  }
+  .landing .boton-vivo:hover,
+  .landing .boton-vivo:active,
+  .landing .elevable:hover {
+    transform: none;
+  }
+  .landing .faq::details-content {
+    transition: none;
   }
 }
 
@@ -224,4 +560,154 @@
 .calendario-propio a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Portal con el tema de la organización: títulos con la fuente de títulos elegida. */
+.portal-tema :is(h1, h2) {
+  font-family: var(--fuente-titulos);
+  letter-spacing: -0.01em;
+}
+
+/* ───────────────────────── Intro de marca (landing) ─────────────────────────
+   Oculta por defecto; visible solo con .con-intro en <html> (lo pone un script en línea antes del primer pintado).
+   Tiempos en --t (1 en escritorio, 0,72 en el celular). Solo transform y opacity. */
+.intro-marca {
+  display: none;
+}
+.con-intro .intro-marca {
+  --t: 1;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overscroll-behavior: contain;
+}
+.intro-corta .intro-marca {
+  --t: 0.72;
+}
+/* Mientras dura, el logo del encabezado espera su llegada (sin cambiar el layout: CLS 0) */
+.con-intro [data-logo-cabecera] {
+  opacity: 0;
+}
+[data-logo-cabecera] {
+  transition: opacity 0.25s ease;
+}
+.intro-fondo {
+  position: absolute;
+  inset: 0;
+  background: var(--color-fondo, #faf6ee);
+  will-change: transform;
+}
+.intro-contenido {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+.intro-simbolo {
+  width: clamp(7rem, 22vw, 10.5rem);
+  aspect-ratio: 330 / 300;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.intro-simbolo svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.intro-trazos path {
+  stroke: var(--color-primario, #1e4d5c);
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: intro-dibujar calc(820ms * var(--t)) cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+.intro-trazos path:nth-child(2) {
+  animation-delay: calc(120ms * var(--t));
+}
+.intro-trazos .intro-trazo-rasgo {
+  stroke: var(--color-acento, #c59a4a);
+  animation-delay: calc(260ms * var(--t));
+}
+.intro-relleno path {
+  fill: var(--color-primario, #1e4d5c);
+  opacity: 0;
+  animation: intro-aparecer calc(380ms * var(--t)) ease forwards calc(700ms * var(--t));
+}
+.intro-relleno .intro-relleno-rasgo {
+  fill: var(--color-acento, #c59a4a);
+}
+.intro-texto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+}
+.intro-nombre {
+  font-family: var(--fuente-titulos, ui-serif, Georgia, serif);
+  font-size: clamp(1.25rem, 3.4vw, 1.75rem);
+  letter-spacing: 0.01em;
+  color: var(--color-titulo, #0a3640);
+  opacity: 0;
+  transform: translateY(10px);
+  animation: intro-subir calc(450ms * var(--t)) cubic-bezier(0.22, 1, 0.36, 1) forwards calc(850ms * var(--t));
+}
+.intro-linea {
+  display: block;
+  width: 7rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-acento, #c59a4a);
+  transform: scaleX(0);
+  animation: intro-linea calc(500ms * var(--t)) cubic-bezier(0.22, 1, 0.36, 1) forwards calc(950ms * var(--t));
+}
+.intro-saltar {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--color-texto, #1d2a2e) 20%, transparent);
+  background: color-mix(in srgb, var(--color-fondo, #faf6ee) 80%, transparent);
+  padding: 0.45rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-texto, #1d2a2e);
+  cursor: pointer;
+}
+.intro-saltar:focus-visible {
+  outline: 2px solid var(--color-primario, #1e4d5c);
+  outline-offset: 2px;
+}
+@keyframes intro-dibujar {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes intro-aparecer {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes intro-subir {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes intro-linea {
+  to {
+    transform: scaleX(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .intro-marca,
+  .con-intro .intro-marca {
+    display: none !important;
+  }
+  .con-intro [data-logo-cabecera] {
+    opacity: 1;
+  }
 }
