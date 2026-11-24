@@ -8,3 +8,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/pt`, changeFrequency: "monthly", priority: 0.9, alternates: { languages: idiomas } },
   ];
 }
+
+// Se genera al pedirlo (no en el build): en Docker, APP_URL solo existe al arrancar el contenedor.
+export const dynamic = "force-dynamic";

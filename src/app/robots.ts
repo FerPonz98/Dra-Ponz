@@ -7,3 +7,6 @@ export default function robots(): MetadataRoute.Robots {
     sitemap: `${base}/sitemap.xml`,
   };
 }
+
+// Se genera al pedirlo (no en el build): en Docker, APP_URL solo existe al arrancar el contenedor.
+export const dynamic = "force-dynamic";

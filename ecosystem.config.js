@@ -36,6 +36,8 @@ module.exports = {
         NODE_ENV: "production",
         PORT: "3000",
         HOSTNAME: "127.0.0.1",
+        // Detrás del Nginx del repo: activa el nonce marcador de la micro-caché de la landing (ver scripts/nginx)
+        LANDING_CACHE_NGINX: "1",
       },
     },
   ],

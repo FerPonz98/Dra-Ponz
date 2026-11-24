@@ -33,6 +33,11 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // Logos e íconos de marca (archivos con nombre fijo): 1 día en caché, revalidación en segundo plano.
+        source: "/brand/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      },
+      {
         // La API no sirve HTML: política mínima (las páginas reciben su CSP con nonce en proxy.ts).
         source: "/api/:path*",
         headers: [{ key: "Content-Security-Policy", value: "default-src 'none'; frame-ancestors 'none'; sandbox" }],

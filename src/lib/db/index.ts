@@ -18,7 +18,8 @@ export function poolApp() {
 }
 /** Pool con el rol dueño (omite RLS): solo auth, superadmin, jobs y resolución de tokens del portal. */
 export function poolAdmin() {
-  g.__poolAdmin ??= crearPool(process.env.DATABASE_ADMIN_URL, "DATABASE_ADMIN_URL");
+  // DATABASE_URL_OWNER (Easypanel) o DATABASE_ADMIN_URL (nombre anterior, desarrollo)
+  g.__poolAdmin ??= crearPool(process.env.DATABASE_URL_OWNER ?? process.env.DATABASE_ADMIN_URL, "DATABASE_URL_OWNER");
   return g.__poolAdmin;
 }
 

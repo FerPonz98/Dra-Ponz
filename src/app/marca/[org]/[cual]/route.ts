@@ -2,13 +2,20 @@ import { eq } from "drizzle-orm";
 import { leerArchivo } from "@/core/archivos";
 import { archivos, organizaciones } from "@/core/db/schema";
 import { dbAdmin } from "@/lib/db";
+import { DemasiadasPeticiones, exigirLimite } from "@/lib/seguridad";
 
 /**
  * Logo e isotipo subidos por una organización (públicos: se ven en la landing, el portal y los correos).
  * Solo sirve archivos de la categoría "marca" asociados a esa organización. Los SVG ya están sanitizados al subirse
  * y además se sirven con CSP sandbox y nosniff (aunque se abran directo, no ejecutan nada).
  */
-export async function GET(_req: Request, ctx: { params: Promise<{ org: string; cual: string }> }) {
+export async function GET(req: Request, ctx: { params: Promise<{ org: string; cual: string }> }) {
+  try {
+    exigirLimite(req.headers, "marca", 300);
+  } catch (e) {
+    if (e instanceof DemasiadasPeticiones) return new Response(e.message, { status: 429, headers: { "Retry-After": "60" } });
+    throw e;
+  }
   const { org, cual } = await ctx.params;
   if (!/^[0-9a-f-]{36}$/i.test(org) || (cual !== "logo" && cual !== "isotipo")) return new Response("No encontrado", { status: 404 });
   const [o] = await dbAdmin().select({ logo: organizaciones.logoArchivoId, isotipo: organizaciones.isotipoArchivoId, suspendida: organizaciones.suspendida }).from(organizaciones).where(eq(organizaciones.id, org));

@@ -1,5 +1,6 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse, type NextRequest } from "next/server";
+import { ipCliente, permitir } from "@/lib/seguridad";
 
 const PROTEGIDAS = /^\/(panel|superadmin|inicio)(\/|$)/;
 /** Nonce de marcador de la landing cacheada en Nginx (se reemplaza en cada respuesta; ver scripts/nginx). */
@@ -25,16 +26,28 @@ export function politicaCsp(nonce: string, dev = process.env.NODE_ENV === "devel
   ].join("; ");
 }
 
+/** Límite general por IP y por minuto (en memoria, por proceso). Reemplaza el limit_req de Nginx (Easypanel usa Traefik). */
+function limitePara(ruta: string): { uso: string; max: number } {
+  if (ruta.startsWith("/p/")) return { uso: "web-portal", max: 300 };
+  if (/^\/(login|recuperar|restablecer)(\/|$)/.test(ruta)) return { uso: "web-acceso", max: 60 };
+  return { uso: "web", max: 600 };
+}
+
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const l = limitePara(pathname);
+  if (process.env.LIMITES_DESACTIVADOS !== "1" && !permitir(`${l.uso}:${ipCliente(req.headers)}`, l.max, 60_000)) {
+    return new NextResponse("Demasiadas solicitudes seguidas. Espera un minuto e inténtalo de nuevo.", { status: 429, headers: { "Retry-After": "60", "Content-Type": "text/plain; charset=utf-8" } });
+  }
   // Chequeo optimista: sin cookie de sesión → /login. La verificación real ocurre en cada página/acción.
   if (PROTEGIDAS.test(pathname) && !getSessionCookie(req, { cookiePrefix: "cobros" })) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
   // Landing detrás de la micro-caché de Nginx: se renderiza con un nonce MARCADOR que Nginx reemplaza en cada respuesta
   // por uno aleatorio ($request_id, vía sub_filter) junto con la CSP. Así la landing se cachea sin reusar nonces.
-  // Solo Nginx manda X-Landing-Cache (lo pisa en las demás rutas); la app escucha en 127.0.0.1, nadie más llega directo.
-  const marcador = req.headers.get("x-landing-cache") === "1" && /^\/(es|pt)\/?$/.test(pathname);
+  // Solo con el Nginx del repo (LANDING_CACHE_NGINX=1, app en 127.0.0.1). En Easypanel/Traefik está APAGADO: la landing
+  // se renderiza siempre con un nonce aleatorio y no se cachea (la seguridad de la CSP tiene prioridad).
+  const marcador = process.env.LANDING_CACHE_NGINX === "1" && req.headers.get("x-landing-cache") === "1" && /^\/(es|pt)\/?$/.test(pathname);
   const nonce = marcador ? NONCE_MARCADOR : Buffer.from(crypto.randomUUID()).toString("base64");
   const csp = politicaCsp(nonce);
   const cabeceras = new Headers(req.headers);

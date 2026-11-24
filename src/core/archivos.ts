@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, constants, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { isAbsolute, join, normalize, resolve, sep } from "node:path";
 import { archivos } from "@/core/db/schema";
 import type { Ejecutor } from "@/lib/db";
@@ -127,4 +127,23 @@ export async function prevalidarArchivo(archivo: File, permitidos: TipoArchivo[]
   const inicio = new Uint8Array(await archivo.slice(0, 16).arrayBuffer());
   const v = validarArchivo(archivo.name, archivo.size, inicio, permitidos);
   if (!v.ok) throw new ErrorArchivo(`${archivo.name}: ${v.error}`);
+}
+
+/**
+ * Al arrancar: UPLOAD_DIR debe existir y poder escribirse (en Easypanel, el Volume Mount /data). Si no, la app no
+ * arranca y dice exactamente qué pasa (mejor que descubrirlo cuando un cliente sube su comprobante).
+ */
+export async function verificarDirectorioSubidas() {
+  const dir = directorioSubidas();
+  const info = await stat(/*turbopackIgnore: true*/ dir).catch(() => null);
+  if (!info?.isDirectory()) throw new Error(`UPLOAD_DIR "${dir}" no existe. Crea la carpeta (en Easypanel: Volume Mount en /data) o corrige UPLOAD_DIR.`);
+  try {
+    await access(/*turbopackIgnore: true*/ dir, constants.W_OK);
+    const prueba = join(/*turbopackIgnore: true*/ dir, `.prueba-escritura-${process.pid}`);
+    await writeFile(/*turbopackIgnore: true*/ prueba, "ok");
+    await rm(/*turbopackIgnore: true*/ prueba, { force: true });
+  } catch {
+    throw new Error(`UPLOAD_DIR "${dir}" no se puede escribir. Revisa los permisos del volumen (el contenedor corre como el usuario "nextjs", uid 1001).`);
+  }
+  return dir;
 }

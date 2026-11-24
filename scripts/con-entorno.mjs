@@ -11,8 +11,10 @@ if (!archivo || separador !== "--" || !cmd.length) {
   process.exit(2);
 }
 const vars = parse(readFileSync(archivo));
-if (/@[^/]+\/cobra_app$/.test(vars.DATABASE_URL ?? "") || vars.NODE_ENV === "production") {
-  console.error("✗ Este archivo apunta a la base de desarrollo/producción. Usa una base de pruebas.");
+// Solo bases LOCALES de prueba: nunca una remota (producción) ni la de desarrollo (cobra_app).
+const destino = URL.canParse(vars.DATABASE_URL ?? "") ? new URL(vars.DATABASE_URL) : null;
+if (!destino || !/^(localhost|127\.0\.0\.1)$/.test(destino.hostname) || destino.pathname === "/cobra_app") {
+  console.error("✗ Este archivo apunta a una base remota o a la de desarrollo (cobra_app). Usa una base de pruebas local.");
   process.exit(2);
 }
 const hijo = spawn(cmd[0], cmd.slice(1), { stdio: "inherit", shell: true, env: { ...process.env, ...vars, DOTENV_CONFIG_PATH: archivo, DOTENV_CONFIG_OVERRIDE: "true" } });
