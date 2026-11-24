@@ -241,3 +241,18 @@ Cuando el prompt no fue explícito se eligió la opción más simple y segura. A
 - **Descargas siempre `attachment`**, con `CSP: sandbox`.
 - **Cuotas en orden** en el portal y un solo pago pendiente por cuota (índice parcial).
 - **Herramientas de auditoría portables y nativas de Windows** (`.herramientas/`, sin WSL ni Docker).
+
+## Despliegue en Easypanel
+
+- **Imagen única (`Dockerfile`) para app y worker**: el worker es el mismo contenedor con `npm run worker`. Las
+  migraciones corren en el arranque (`docker-entrypoint.sh`) con el rol dueño y un `pg_advisory_lock`; el rol de la app
+  se crea/ajusta solo y siempre sin `BYPASSRLS`.
+- **Sin Nginx**: Traefik pone el HTTPS; la app aplica cabeceras, límites por IP (`src/proxy.ts`) y el límite de 50 MB.
+- **La landing NO se cachea en Easypanel**: cachearla obligaría a reusar el nonce de la CSP. Se prioriza la seguridad
+  (~15 ms por visita). El micro-caché con reemplazo del nonce queda solo para el Nginx del repo (`LANDING_CACHE_NGINX=1`).
+- **Crons en un worker con node-cron (America/La_Paz)** en vez de llamadas HTTP: cada job con `pg_try_advisory_lock`
+  para que dos réplicas no lo corran a la vez. `/api/jobs/*` siguen disponibles con `CRON_SECRET`.
+- **Backups cifrados AES-256-GCM** (clave derivada con scrypt de `BACKUP_ENCRYPTION_KEY`), 14 días en `/data/backups`
+  y copia externa con rclone configurado por variables. Restauración probada en local.
+- **Validación del entorno con Zod al arrancar** (`src/lib/entorno.ts`): si falta algo, el proceso termina con código 1
+  y el log dice qué variable o carpeta falta.

@@ -8,6 +8,7 @@ Especificación: `PROMPT_cobros_tesis.md`. Avance: `PROGRESO.md`. Decisiones: `D
 - `npm run dev` · `npm run build` · `npm run typecheck` · `npm run lint` · `npm run test` · `npm run e2e`
 - BD: `npm run db:setup` (una vez) · `npm run db:generate` · `npm run db:migrate` · `npm run db:seed` · `npm run db:reset` (solo dev)
 - Postgres local en el puerto 5433.
+- Producción (Easypanel, ver `DEPLOY_EASYPANEL.md`): `npm run build:prod` (empaqueta `scripts/prod` en `dist-prod/`) · `npm run worker` · `npm run seed:prod` · `npm run backup:restaurar`. Variables nuevas: validarlas en `src/lib/entorno.ts` y documentarlas en `.env.example`.
 
 ## Reglas
 - Consultas de negocio SIEMPRE con `withOrg(orgId, tx => …)` (RLS). `withAdmin`/`dbAdmin` solo para auth, superadmin, jobs y tokens del portal.

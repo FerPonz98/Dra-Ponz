@@ -233,3 +233,11 @@
 Ver `SEGURIDAD_Y_CARGA.md`: 1 hallazgo alto y 13 medios corregidos y con tests; landing, portal y panel cumplen las metas
 de carga (Nginx + PM2 en cluster); job de mora de 48 s a 5 s con 50.000 cuotas. Revisión: typecheck, lint, build, 82/82
 tests, 44/44 e2e, npm audit 0.
+
+## Despliegue en Easypanel ✅
+
+Ver `DEPLOY_EASYPANEL.md`. Dockerfile multi-etapa (standalone, sin root, HEALTHCHECK `/api/health`), entrypoint con
+migraciones y rol de la app, worker de crons y backups cifrados, `seed:prod`, validación del entorno. Prueba local en
+modo producción (sin Docker) con `cobra_app_test` temporal: migraciones idempotentes, seed, login, subida de 40 MB y
+rechazo de 51 MB, jobs, lock entre réplicas, backup, restauración y fallos claros de configuración. Revisión:
+typecheck, lint, build, 88/88 tests, 51/51 e2e.
