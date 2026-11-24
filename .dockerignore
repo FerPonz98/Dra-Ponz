@@ -1,0 +1,25 @@
+# Nada de secretos, dependencias locales ni archivos de trabajo en la imagen
+.git
+.github
+node_modules
+.next
+dist-prod
+.env
+.env.*
+!.env.example
+.herramientas
+.data
+uploads
+revisiones
+lighthouse
+test-results
+playwright-report
+tests
+coverage
+*.log
+*.tsbuildinfo
+.vscode
+.idea
+.claude
+Dockerfile
+.dockerignore
