@@ -13,6 +13,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   reporter: [["list"]],
   globalSetup: "./tests/e2e/preparar.ts",
+  globalTeardown: "./tests/e2e/limpiar.ts",
   use: { baseURL: URL_BASE, trace: "retain-on-failure", locale: "es-BO", timezoneId: "America/La_Paz" },
   projects: [
     { name: "escritorio", use: { ...devices["Desktop Chrome"] } },

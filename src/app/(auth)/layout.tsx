@@ -48,7 +48,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
             ))}
           </ul>
         </div>
-        <p className="relative text-xs text-indigo-300">© {new Date().getFullYear()} · Hecho en Bolivia</p>
+        <p className="relative text-xs text-indigo-300">© {new Date().getFullYear()}</p>
       </section>
       <section className="flex items-center justify-center bg-background px-4 py-12 sm:px-8">
         <div className="w-full max-w-sm">
