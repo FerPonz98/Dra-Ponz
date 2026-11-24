@@ -50,3 +50,6 @@ next-env.d.ts
 
 # Herramientas portables de auditoría/carga (scripts/auditoria/instalar-herramientas.ps1)
 /.herramientas/
+
+# Scripts de producción empaquetados (npm run build:prod)
+/dist-prod/
