@@ -11,6 +11,8 @@ import { formatoFecha } from "@/lib/fechas";
 import { BadgePago } from "@/modules/cobros/componentes/estado";
 import { listarPagos } from "@/modules/cobros/servicios/pagos";
 import { comprobantesPorAprobar } from "@/modules/cobros/servicios/panel";
+import { BotonEliminar } from "@/components/panel/boton-eliminar";
+import { accionEliminarPago } from "../acciones";
 import { RevisionPago } from "./revision-pago";
 
 export const metadata: Metadata = { title: "Comprobantes" };
@@ -84,7 +86,16 @@ export default async function PagosPage(props: { searchParams: Promise<{ hecho?:
                         Ver comprobante
                       </a>
                     )}
-                    <RevisionPago pagoId={r.pago.id} />
+                    <div className="flex items-center justify-between gap-2">
+                      <RevisionPago pagoId={r.pago.id} />
+                      <BotonEliminar
+                        compacto
+                        etiqueta="Eliminar comprobante"
+                        titulo="¿Eliminar este comprobante?"
+                        descripcion={`Se borra el comprobante de ${r.cliente.nombre} (cuota ${r.cuota.numero}) y su archivo. El cliente podrá subir otro desde su portal. No se puede deshacer.`}
+                        accion={accionEliminarPago.bind(null, r.pago.id)}
+                      />
+                    </div>
                   </CardContent>
                 </Card>
               );
@@ -109,7 +120,20 @@ export default async function PagosPage(props: { searchParams: Promise<{ hecho?:
                     {formatoMoneda(r.pago.montoBobCentavos, "BOB")} · {formatoFecha(r.pago.revisadoEn)}
                   </span>
                 </span>
-                <BadgePago estado={r.pago.estado} />
+                <span className="flex shrink-0 items-center gap-1">
+                  <BadgePago estado={r.pago.estado} />
+                  <BotonEliminar
+                    compacto
+                    etiqueta="Eliminar comprobante"
+                    titulo="¿Eliminar este comprobante?"
+                    descripcion={
+                      r.pago.estado === "aprobado"
+                        ? `Se borra el pago aprobado de ${r.cliente.nombre} (cuota ${r.cuota.numero}) y su archivo. La cuota vuelve a quedar pendiente de pago y se recalcula la mora. No se puede deshacer.`
+                        : `Se borra el comprobante rechazado de ${r.cliente.nombre} (cuota ${r.cuota.numero}) y su archivo. No se puede deshacer.`
+                    }
+                    accion={accionEliminarPago.bind(null, r.pago.id)}
+                  />
+                </span>
               </li>
             ))}
           </ul>

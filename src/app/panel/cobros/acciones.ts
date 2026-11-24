@@ -2,13 +2,15 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { borrarDelDisco } from "@/core/archivos";
 import { actorDe, hoyDe, requerirModulo } from "@/core/contexto";
+import { registrarAuditoria } from "@/core/servicios";
 import { ejecutar, type Resultado } from "@/lib/acciones";
 import { withOrg } from "@/lib/db";
 import type { CuotaEditable, ReglasMora } from "@/modules/cobros/dominio/plan";
 import { actualizarCliente, crearCliente, type DatosCliente } from "@/modules/cobros/servicios/clientes";
 import { anularEnlace, crearEnlace, urlPortal } from "@/modules/cobros/servicios/enlaces";
-import { aprobarPago, rechazarPago } from "@/modules/cobros/servicios/pagos";
+import { aprobarPago, eliminarPago, rechazarPago } from "@/modules/cobros/servicios/pagos";
 import { cambiarMonedaYTitulo, crearPlan, guardarCuotas, guardarReglas, recalcularMora, type DatosPlan } from "@/modules/cobros/servicios/planes";
 import { sincronizarTrasPago } from "@/app/panel/sincronizar";
 import { PLANTILLAS_BASE, type ClavePlantilla } from "@/modules/cobros/dominio/mensajes";
@@ -112,6 +114,23 @@ export async function accionRechazarPago(pagoId: string, motivo: string): Promis
   const r = await ejecutar(() => withOrg(ctx.organizacion.id, (tx) => rechazarPago(tx, actorDe(ctx), uuid.parse(pagoId), motivo)), "Pago rechazado.");
   revalidatePath("/panel/cobros/pagos");
   return r;
+}
+
+export async function accionEliminarPago(pagoId: string): Promise<Resultado> {
+  const ctx = await requerirModulo("cobros", "cobros:aprobar");
+  const org = ctx.organizacion.id;
+  const r = await ejecutar(async () => {
+    const { pago, rutas } = await withOrg(org, async (tx) => {
+      const res = await eliminarPago(tx, uuid.parse(pagoId), hoyDe(ctx), ctx.organizacion.zonaHoraria);
+      await registrarAuditoria(tx, { organizacionId: org, usuarioId: ctx.usuario.id, modulo: "cobros", accion: "Eliminó un comprobante", entidad: "pago", entidadId: res.pago.id, detalle: { estado: res.pago.estado, montoBobCentavos: res.pago.montoBobCentavos } });
+      return res;
+    });
+    await borrarDelDisco(rutas);
+    if (pago.estado === "aprobado") await sincronizarTrasPago(ctx, pago.planId);
+    return { planId: pago.planId };
+  }, "Comprobante eliminado.");
+  revalidatePath("/panel", "layout");
+  return r.ok ? { ok: true, mensaje: r.mensaje } : r;
 }
 
 export async function accionGuardarPlantilla(clave: string, cuerpo: string): Promise<Resultado> {

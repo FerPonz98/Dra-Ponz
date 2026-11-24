@@ -74,6 +74,54 @@ test.describe("Fase 9 · eliminar, foto de la landing y contraseña", () => {
     expect(await sqlAdmin("select 1 from planes_pago where id = $1", [o.plan_id])).toHaveLength(0);
   });
 
+  test("eliminar un comprobante aprobado: la cuota vuelve a pendiente y el archivo se borra del disco", async ({ page, browser }) => {
+    const p = await planConPortal("dra-ponz", `comprobante ${unico()}`);
+    const portal = await browser.newPage();
+    await entrarPortal(portal, p.token, p.ci);
+    await portal.getByRole("button", { name: "Ya pagué, subir comprobante" }).click();
+    await portal.locator("input[type=file]").first().setInputFiles({ name: "comprobante.pdf", mimeType: "application/pdf", buffer: readFileSync("tests/fixtures/comprobante.pdf") });
+    await portal.getByRole("button", { name: "Enviar comprobante" }).click();
+    await expect(portal.getByRole("status").filter({ hasText: /omprobante/ }).first()).toBeVisible();
+    await portal.close();
+    const [pago] = await sqlAdmin<{ id: string; ruta: string }>("select p.id, a.ruta_relativa as ruta from pagos p join archivos a on a.id = p.comprobante_archivo_id where p.plan_id = $1", [p.planId]);
+
+    await iniciarSesion(page, "dra");
+    await page.goto("/panel/cobros/pagos");
+    const tarjeta = page.getByTestId("comprobante-pendiente").filter({ hasText: p.nombre });
+    await tarjeta.getByRole("button", { name: "Aprobar" }).click();
+    await expect(page).toHaveURL(/hecho=aprobado/);
+    expect((await sqlAdmin<{ estado: string }>("select estado from cuotas where id = $1", [p.cuotaIds[0]]))[0].estado).toBe("pagada");
+
+    await page.goto(`/panel/cobros/planes/${p.planId}`);
+    await page.getByRole("button", { name: "Eliminar comprobante" }).click();
+    await page.getByRole("button", { name: "Sí, eliminar" }).click();
+    await expect(page.getByText("Comprobante eliminado.")).toBeVisible();
+    await expect(page.getByText("Todavía no hay pagos registrados.")).toBeVisible();
+    expect(await sqlAdmin("select 1 from pagos where id = $1", [pago.id])).toHaveLength(0);
+    expect((await sqlAdmin<{ estado: string; pagada_en: Date | null }>("select estado, pagada_en from cuotas where id = $1", [p.cuotaIds[0]]))[0]).toMatchObject({ estado: "pendiente", pagada_en: null });
+    expect(existsSync(join(dirSubidas(), pago.ruta))).toBe(false);
+  });
+
+  test("eliminar desde el menú ⋯ de la lista de planes y de clientes", async ({ page }) => {
+    const p = await planConPortal("dra-ponz", `lista ${unico()}`);
+    await iniciarSesion(page, "dra");
+    await page.goto("/panel/cobros/planes");
+    await page.getByLabel("Buscar por concepto o cliente").fill(p.nombre);
+    await page.getByRole("button", { name: "Más acciones" }).locator("visible=true").first().click();
+    await page.getByRole("menuitem", { name: "Eliminar plan" }).click();
+    await page.getByRole("button", { name: "Sí, eliminar" }).click();
+    await expect(page).toHaveURL(/\/panel\/cobros\/planes\?eliminado=1/);
+    expect(await sqlAdmin("select 1 from planes_pago where id = $1", [p.planId])).toHaveLength(0);
+
+    await page.goto("/panel/cobros/clientes");
+    await page.getByLabel("Buscar por nombre, CI, celular o correo").fill(p.nombre);
+    await page.getByRole("button", { name: "Más acciones" }).locator("visible=true").first().click();
+    await page.getByRole("menuitem", { name: "Eliminar cliente" }).click();
+    await page.getByRole("button", { name: "Sí, eliminar" }).click();
+    await expect(page).toHaveURL(/\/panel\/cobros\/clientes\?eliminado=1/);
+    expect(await sqlAdmin("select 1 from clientes where id = $1", [p.clienteId])).toHaveLength(0);
+  });
+
   test("eliminar un formulario", async ({ page }) => {
     await iniciarSesion(page, "dra");
     await page.goto("/panel/tesis/formularios/nuevo");

@@ -12,6 +12,7 @@ import { withOrg } from "@/lib/db";
 import { formatoMoneda } from "@/lib/dinero";
 import { BadgeMora, ETIQUETA_MORA } from "@/modules/cobros/componentes/estado";
 import { listarPlanes } from "@/modules/cobros/servicios/planes";
+import { accionEliminarPlan } from "@/app/panel/eliminar-acciones";
 
 export const metadata: Metadata = { title: "Planes de pago" };
 
@@ -75,6 +76,19 @@ export default async function PlanesPage(props: { searchParams: Promise<{ elimin
             acciones: [
               { etiqueta: "Ver plan", href: `/panel/cobros/planes/${p.plan.id}` },
               { etiqueta: "Ver cliente", href: `/panel/cobros/clientes/${p.cliente.id}` },
+              // Los planes de una propuesta de tesis se eliminan desde la propuesta.
+              ...(editar && p.plan.origen !== "tesis"
+                ? [
+                    {
+                      etiqueta: "Eliminar plan",
+                      eliminar: {
+                        titulo: "¿Eliminar este plan de pagos?",
+                        descripcion: `Se borran las cuotas, los pagos, los comprobantes y el enlace del portal de «${p.plan.titulo}» (${p.cliente.nombre}). El cliente no se borra. No se puede deshacer.`,
+                        accion: accionEliminarPlan.bind(null, p.plan.id),
+                      },
+                    },
+                  ]
+                : []),
             ],
           };
         })}

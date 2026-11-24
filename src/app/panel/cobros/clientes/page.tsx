@@ -9,6 +9,7 @@ import { Avatar, EncabezadoPagina, EstadoVacio } from "@/components/ui/varios";
 import { withOrg } from "@/lib/db";
 import { formatoFecha } from "@/lib/fechas";
 import { listarClientes } from "@/modules/cobros/servicios/clientes";
+import { accionEliminarCliente } from "@/app/panel/eliminar-acciones";
 import { NuevoCliente } from "./form-cliente";
 
 export const metadata: Metadata = { title: "Clientes" };
@@ -51,7 +52,19 @@ export default async function ClientesPage(props: { searchParams: Promise<{ q?: 
           },
           acciones: [
             { etiqueta: "Ver ficha", href: `/panel/cobros/clientes/${c.id}` },
-            ...(editar ? [{ etiqueta: "Nuevo plan de pagos", href: `/panel/cobros/planes/nuevo?cliente=${c.id}` }] : []),
+            ...(editar
+              ? [
+                  { etiqueta: "Nuevo plan de pagos", href: `/panel/cobros/planes/nuevo?cliente=${c.id}` },
+                  {
+                    etiqueta: "Eliminar cliente",
+                    eliminar: {
+                      titulo: `¿Eliminar a ${c.nombre}?`,
+                      descripcion: "Se borran también sus planes de pago, sus propuestas de tesis, cuotas, pagos, comprobantes y archivos. No se puede deshacer.",
+                      accion: accionEliminarCliente.bind(null, c.id),
+                    },
+                  },
+                ]
+              : []),
           ],
         }))}
         vacio={

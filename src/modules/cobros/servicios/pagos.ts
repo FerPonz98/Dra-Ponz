@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, inArray, lt, notExists, sql } from "drizzle-orm";
-import { guardarArchivo, type TipoArchivo } from "@/core/archivos";
+import { guardarArchivo, quitarFilasArchivos, type TipoArchivo } from "@/core/archivos";
 import { archivos } from "@/core/db/schema";
 import type { Ejecutor } from "@/lib/db";
 import { convertirABob } from "@/modules/cobros/dominio/tipo-cambio";
@@ -88,6 +88,27 @@ export async function rechazarPago(tx: Ejecutor, actor: Actor, pagoId: string, m
   if (p.estado !== "pendiente") throw new Error("Este pago ya fue revisado");
   await tx.update(pagos).set({ estado: "rechazado", motivoRechazo: m.slice(0, 500), revisadoPor: actor.usuarioNombre, revisadoEn: new Date() }).where(eq(pagos.id, pagoId));
   return p;
+}
+
+/**
+ * Elimina un comprobante (pago) y su archivo. Si estaba aprobado y la cuota no tiene otro pago aprobado,
+ * la cuota vuelve a «pendiente» (y el plan, si estaba finalizado, vuelve a activo) y se recalcula la mora.
+ * Devuelve el pago borrado y las rutas a quitar del disco después del commit.
+ */
+export async function eliminarPago(tx: Ejecutor, pagoId: string, hoy: string, zona?: string) {
+  const [p] = await tx.select().from(pagos).where(eq(pagos.id, pagoId)).for("update");
+  if (!p) throw new Error("Comprobante no encontrado");
+  await tx.delete(pagos).where(eq(pagos.id, pagoId));
+  if (p.estado === "aprobado") {
+    const [otro] = await tx.select({ id: pagos.id }).from(pagos).where(and(eq(pagos.cuotaId, p.cuotaId), eq(pagos.estado, "aprobado"))).limit(1);
+    if (!otro) {
+      await tx.update(cuotas).set({ estado: "pendiente", pagadaEn: null }).where(eq(cuotas.id, p.cuotaId));
+      await tx.update(planesPago).set({ estado: "activo", actualizadoEn: new Date() }).where(and(eq(planesPago.id, p.planId), eq(planesPago.estado, "finalizado")));
+      await recalcularMora(tx, p.planId, hoy, zona);
+    }
+  }
+  const rutas = await quitarFilasArchivos(tx, [p.comprobanteArchivoId]);
+  return { pago: p, rutas };
 }
 
 export async function listarPagos(tx: Ejecutor, estado: "pendiente" | "aprobado" | "rechazado" = "pendiente") {

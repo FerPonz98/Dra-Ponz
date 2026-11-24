@@ -5,7 +5,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
 import { Input, Select } from "./input";
-import { MenuAcciones } from "./menu";
+import { MenuAcciones, type AccionFila } from "./menu";
 
 export type ColumnaTabla = { id: string; titulo: string; ordenable?: boolean; alinear?: "derecha"; ocultarEnMovil?: boolean; clase?: string };
 export type FilaTabla = {
@@ -19,7 +19,7 @@ export type FilaTabla = {
   /** Valor para el filtro. */
   filtro?: string;
   href?: string;
-  acciones?: { etiqueta: string; href: string }[];
+  acciones?: AccionFila[];
   /** Título y subtítulo de la tarjeta en el celular (si no, se usa la primera columna). */
   titulo?: React.ReactNode;
 };

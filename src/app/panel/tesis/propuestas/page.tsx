@@ -12,6 +12,7 @@ import { formatoFecha } from "@/lib/fechas";
 import { BadgeEstadoProyecto } from "@/modules/tesis/componentes/estado";
 import { ETIQUETA_ESTADO } from "@/modules/tesis/dominio/estados";
 import { listarPropuestas } from "@/modules/tesis/servicios/propuestas";
+import { accionEliminarPropuesta } from "@/app/panel/eliminar-acciones";
 
 export const metadata: Metadata = { title: "Propuestas y proyectos" };
 
@@ -19,7 +20,8 @@ export default async function PropuestasPage(props: { searchParams: Promise<{ el
   const { eliminado } = await props.searchParams;
   const ctx = await requerirModulo("tesis", "tesis:ver");
   const lista = await withOrg(ctx.organizacion.id, (tx) => listarPropuestas(tx));
-  const boton = ctx.puede("tesis:editar") && (
+  const editar = ctx.puede("tesis:editar");
+  const boton = editar && (
     <Button asChild>
       <Link href="/panel/tesis/propuestas/nueva">
         <Plus /> Nueva propuesta
@@ -65,7 +67,22 @@ export default async function PropuestasPage(props: { searchParams: Promise<{ el
             actualizado: <span className="text-muted-foreground">{formatoFecha(p.actualizadoEn)}</span>,
             estado: <BadgeEstadoProyecto estado={p.estado} />,
           },
-          acciones: [{ etiqueta: "Abrir ficha", href: `/panel/tesis/propuestas/${p.id}` }, { etiqueta: "Plan de pagos", href: `/panel/cobros/planes/${p.planId}` }],
+          acciones: [
+            { etiqueta: "Abrir ficha", href: `/panel/tesis/propuestas/${p.id}` },
+            { etiqueta: "Plan de pagos", href: `/panel/cobros/planes/${p.planId}` },
+            ...(editar
+              ? [
+                  {
+                    etiqueta: "Eliminar propuesta",
+                    eliminar: {
+                      titulo: "¿Eliminar esta propuesta?",
+                      descripcion: `Se borra «${p.titulo}» con su cronograma, revisiones, extras, archivos, respuestas y su plan de pagos (cuotas, pagos y comprobantes). El enlace deja de funcionar. El estudiante queda en Clientes. No se puede deshacer.`,
+                      accion: accionEliminarPropuesta.bind(null, p.id),
+                    },
+                  },
+                ]
+              : []),
+          ],
         }))}
         vacio={
           <Card>

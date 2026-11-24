@@ -19,6 +19,7 @@ import { EdicionPlan } from "./edicion-plan";
 import { EnlacesPlan } from "./enlaces-plan";
 import { BotonEliminar } from "@/components/panel/boton-eliminar";
 import { accionEliminarPlan } from "@/app/panel/eliminar-acciones";
+import { accionEliminarPago } from "../../acciones";
 
 export default async function PlanPage(props: { params: Promise<{ id: string }> }) {
   const ctx = await requerirModulo("cobros", "cobros:ver");
@@ -37,6 +38,7 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
   const evaluacion = evaluarMora({ reglas: p.reglas, aceptadoEn: p.plan.aceptadoEn, numeroMoras: p.plan.numeroMoras, estadoMora: p.plan.estadoMora }, p.cuotas.map((c) => ({ ...c, pagoEnRevision: c.pagoPendiente })), hoy);
   const sit = new Map(evaluacion.cuotas.map((c) => [c.id, c]));
   const editable = ctx.puede("cobros:editar");
+  const borrarPagos = ctx.puede("cobros:aprobar");
   const recargosPagados = p.cuotas.filter((c) => c.estado === "pagada").reduce((s, c) => s + c.recargoCentavos, 0);
   const saldo = p.total + p.totalRecargos - p.pagado - recargosPagados;
   const pct = p.total ? Math.round((p.pagado / p.total) * 100) : 0;
@@ -213,7 +215,22 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
                     <span className="font-medium">
                       Cuota {p.cuotas.find((c) => c.id === pg.cuotaId)?.numero ?? "?"} · {formatoMoneda(pg.montoBobCentavos, "BOB")}
                     </span>
-                    <BadgePago estado={pg.estado} />
+                    <span className="flex shrink-0 items-center gap-1">
+                      <BadgePago estado={pg.estado} />
+                      {borrarPagos && (
+                        <BotonEliminar
+                          compacto
+                          etiqueta="Eliminar comprobante"
+                          titulo="¿Eliminar este comprobante?"
+                          descripcion={
+                            pg.estado === "aprobado"
+                              ? "Se borra este pago aprobado y su archivo. La cuota vuelve a quedar pendiente de pago y se recalcula la mora. No se puede deshacer."
+                              : "Se borra este comprobante y su archivo. No se puede deshacer."
+                          }
+                          accion={accionEliminarPago.bind(null, pg.id)}
+                        />
+                      )}
+                    </span>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {formatoFecha(pg.creadoEn)}

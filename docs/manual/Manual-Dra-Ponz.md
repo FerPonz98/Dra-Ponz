@@ -253,6 +253,8 @@ Un **estudiante** es un cliente. Puedes crearlo aquí o directamente al armar un
 
 ![Cliente eliminado](img/eliminar-listo.png)
 
+> **Atajo:** también puedes eliminarlo desde la lista de **Clientes**: abre el menú **⋯** de su fila y elige **Eliminar cliente**.
+
 > **Importante:** eliminar un cliente borra **también** sus planes de pago, sus propuestas de tesis, cuotas, pagos, comprobantes y archivos. **No se puede deshacer.** Si solo quieres que deje de entrar a su portal, mejor **anula su enlace** (ver [Cobros](#portal)).
 
 ## 4. Crear una propuesta paso a paso {#crear-propuesta}
@@ -426,6 +428,8 @@ En la ficha de la propuesta, tarjeta **Propuesta y enlace**, haz clic en **Elimi
 
 ![Eliminar una propuesta](img/eliminar-propuesta.png)
 
+También puedes hacerlo desde la lista de **Propuestas**: menú **⋯** de la fila → **Eliminar propuesta**.
+
 Se borra la propuesta con su cronograma, revisiones, extras, archivos, respuestas y **su plan de pagos** (cuotas, pagos y comprobantes). El enlace deja de funcionar. El estudiante **sigue** en Clientes: si también quieres borrarlo, elimínalo desde su ficha.
 
 > **Importante:** no se puede deshacer. Si la propuesta solo venció, no hace falta borrarla: puedes [editarla y reenviarla](#editar-reenviar).
@@ -475,6 +479,15 @@ Arriba aparece la confirmación (1) y abajo, la lista de **revisados recientemen
 > **Importante:** revisa siempre tu app del banco antes de aprobar. Aprobar marca la cuota como pagada.
 
 > **Consejo:** mientras un comprobante está en revisión, esa cuota no acumula mora. Revísalos pronto para que tus indicadores estén al día.
+
+### Eliminar un comprobante {#eliminar-comprobante}
+
+Haz clic en el **ícono de basurero** del comprobante y confirma con **Sí, eliminar**. Lo encuentras en **Comprobantes** (en cada tarjeta por aprobar y en **Revisados recientemente**) y en la ficha del plan, tarjeta **Pagos**.
+
+- Si estaba **por aprobar** o **rechazado**, solo se borra el comprobante y su archivo; el estudiante puede subir otro.
+- Si estaba **aprobado**, la cuota **vuelve a quedar pendiente** de pago y se recalcula la mora.
+
+> **Importante:** no se puede deshacer.
 
 ### Editar fechas y montos {#editar-cuotas}
 
@@ -530,6 +543,8 @@ Después, en la ficha del plan, genera el enlace del portal y envíalo por Whats
 En la ficha del plan, arriba a la derecha, haz clic en **Eliminar plan** (1) y confirma. Se borran sus cuotas, pagos, comprobantes y el enlace del portal. El cliente **no** se borra.
 
 ![Eliminar un plan de pagos](img/eliminar-plan.png)
+
+También puedes hacerlo desde la lista de **Planes de pago**: menú **⋯** de la fila → **Eliminar plan**.
 
 > **Nota:** los planes de una **propuesta de tesis** no tienen este botón: se eliminan junto con la propuesta (ver [Eliminar una propuesta](#eliminar-propuesta)).
 
@@ -833,7 +848,7 @@ Abre el plan → **Editar plan → Cuotas**, corrige el monto o la fecha y haz c
 
 ### «Aprobé un comprobante por error»
 
-No se puede «desaprobar» desde el panel. Escríbele a Fernando con el nombre del estudiante y la cuota: él lo corrige.
+Elimina ese comprobante (ver [Eliminar un comprobante](#eliminar-comprobante)): la cuota vuelve a quedar pendiente y el estudiante puede subir el correcto.
 
 ### «El estudiante pagó, pero la cuota sigue pendiente»
 

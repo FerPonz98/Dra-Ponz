@@ -18,8 +18,11 @@ export function Confirmar({
   peligroso,
   alConfirmar,
   children,
+  abierto: abiertoControlado,
+  alCambiar,
 }: {
-  disparador: React.ReactNode;
+  /** Botón que abre el diálogo. Se puede omitir si se controla con `abierto`/`alCambiar` (p. ej. desde un menú). */
+  disparador?: React.ReactNode;
   titulo: string;
   descripcion?: React.ReactNode;
   confirmar?: string;
@@ -27,12 +30,19 @@ export function Confirmar({
   peligroso?: boolean;
   alConfirmar: () => void | Promise<void>;
   children?: React.ReactNode;
+  abierto?: boolean;
+  alCambiar?: (v: boolean) => void;
 }) {
-  const [abierto, setAbierto] = React.useState(false);
+  const [abiertoInterno, setAbiertoInterno] = React.useState(false);
+  const abierto = abiertoControlado ?? abiertoInterno;
+  const setAbierto = (v: boolean) => {
+    if (abiertoControlado === undefined) setAbiertoInterno(v);
+    alCambiar?.(v);
+  };
   const [ocupado, setOcupado] = React.useState(false);
   return (
     <AlertDialog.Root open={abierto} onOpenChange={setAbierto}>
-      <AlertDialog.Trigger asChild>{disparador}</AlertDialog.Trigger>
+      {disparador && <AlertDialog.Trigger asChild>{disparador}</AlertDialog.Trigger>}
       <AlertDialog.Portal>
         <AlertDialog.Overlay className={capa} />
         <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-surface p-6 shadow-lg focus:outline-none">
