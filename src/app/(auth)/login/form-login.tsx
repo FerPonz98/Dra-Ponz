@@ -27,7 +27,7 @@ export function FormLogin() {
     setError(null);
     const r = await authClient.signIn.email({ email: d.correo, password: d.contrasena });
     if (r.error) {
-      setError(r.error.status === 429 ? "Demasiados intentos. Espera un minuto e inténtalo de nuevo." : "Correo o contraseña incorrectos.");
+      setError(r.error.status === 429 ? "Demasiados intentos. Espera unos minutos e inténtalo de nuevo." : "Correo o contraseña incorrectos.");
       return;
     }
     router.replace("/inicio");
@@ -43,7 +43,7 @@ export function FormLogin() {
         <h1 className="text-2xl font-semibold tracking-tight">Te damos la bienvenida</h1>
         <p className="text-sm text-muted-foreground">Ingresa con tu correo y contraseña.</p>
       </div>
-      <form onSubmit={handleSubmit(enviar)} className="space-y-5" noValidate>
+      <form method="post" onSubmit={handleSubmit(enviar)} className="space-y-5" noValidate>
         {error && <Aviso tipo="error">{error}</Aviso>}
         <Campo etiqueta="Correo" htmlFor="correo" error={formState.errors.correo?.message}>
           <Input id="correo" type="email" autoComplete="email" autoFocus aria-invalid={!!formState.errors.correo} {...register("correo")} />

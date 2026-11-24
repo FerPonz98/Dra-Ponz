@@ -57,6 +57,48 @@
       "when": 1795394602739,
       "tag": "0007_rls_landing",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795468162853,
+      "tag": "0008_tema",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795468170087,
+      "tag": "0009_rls_tema",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795472565907,
+      "tag": "0010_seguridad_acceso",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795472727035,
+      "tag": "0011_integridad_dinero",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1795473141746,
+      "tag": "0012_fk_misma_organizacion",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1795480891785,
+      "tag": "0013_marca",
+      "breakpoints": true
     }
   ]
 }

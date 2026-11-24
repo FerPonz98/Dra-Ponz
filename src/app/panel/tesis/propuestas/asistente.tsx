@@ -53,7 +53,8 @@ function erroresDePaso(v: ValorAsistente, paso: number): Record<string, string> 
     if (v.titulo.trim().length < 3) e.titulo = "Escribe el tema o nombre del proyecto.";
     if (v.modoEstudiante === "existente" && !v.clienteId) e.estudiante = "Elige un estudiante.";
     if (v.modoEstudiante === "nuevo" && v.nuevo.nombre.trim().length < 2) e.estudiante = "Escribe el nombre del estudiante.";
-    if (v.nuevo.correo && !/^\S+@\S+\.\S+$/.test(v.nuevo.correo)) e.correo = "Correo inválido.";
+    // Regex acotada (sin cuantificadores que se solapen: no hay ReDoS con entradas largas).
+    if (v.nuevo.correo && (v.nuevo.correo.length > 254 || !/^[^\s@]{1,64}@[^\s@.]{1,63}(\.[^\s@.]{1,63})+$/.test(v.nuevo.correo))) e.correo = "Correo inválido.";
   }
   if (paso === 2) {
     if (!v.cuotas.length) e.cuotas = "Genera o agrega al menos una cuota.";

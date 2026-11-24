@@ -57,7 +57,14 @@ export function extensionesDe(tipos: TipoArchivo[]): string[] {
 
 export function directorioSubidas() {
   const dir = process.env.UPLOAD_DIR ?? "./.data/uploads";
-  return isAbsolute(dir) ? dir : resolve(/*turbopackIgnore: true*/ process.cwd(), dir);
+  if (isAbsolute(dir)) return dir;
+  const ruta = resolve(/*turbopackIgnore: true*/ process.cwd(), dir);
+  // El servidor standalone (PM2 en producción) cambia el directorio de trabajo a .next/standalone, que
+  // `npm run build` borra en cada deploy: una ruta relativa haría que los archivos subidos se pierdan.
+  if (ruta.split(/[\\/]/).includes(".next")) {
+    throw new Error(`UPLOAD_DIR "${dir}" quedaría dentro de .next (se borra en cada deploy). Usa una ruta absoluta, p. ej. /var/data/uploads`);
+  }
+  return ruta;
 }
 
 /** Valida y guarda un archivo en UPLOAD_DIR/{organizacion_id}/{categoria}/ y registra la fila (con RLS del tx). */
@@ -70,21 +77,30 @@ export async function guardarArchivo(
   const bytes = new Uint8Array(await archivo.arrayBuffer());
   const v = validarArchivo(archivo.name, bytes.byteLength, bytes.subarray(0, 16), d.permitidos);
   if (!v.ok) throw new ErrorArchivo(v.error);
+  return guardarBytes(tx, { ...d, nombre: archivo.name, extension: v.extension, mime: v.mime, bytes });
+}
+
+/** Escribe bytes YA VALIDADOS en UPLOAD_DIR/{organizacion_id}/{categoria}/{uuid}.{ext} y registra la fila. */
+export async function guardarBytes(
+  tx: Ejecutor,
+  d: { organizacionId: string; categoria: string; nombre: string; extension: string; mime: string; bytes: Uint8Array; enlaceId?: string | null; subidoPor?: string | null },
+) {
   if (!/^[a-z0-9-]+$/.test(d.categoria)) throw new Error("Categoría inválida");
+  if (!/^[a-z0-9]{1,5}$/.test(d.extension)) throw new Error("Extensión inválida");
   const id = crypto.randomUUID();
-  const relativa = [d.organizacionId, d.categoria, `${id}.${v.extension}`].join("/");
+  const relativa = [d.organizacionId, d.categoria, `${id}.${d.extension}`].join("/");
   const destino = rutaSegura(relativa);
   await mkdir(join(destino, ".."), { recursive: true });
-  await writeFile(destino, bytes);
+  await writeFile(destino, d.bytes);
   const [fila] = await tx
     .insert(archivos)
     .values({
       id,
       organizacionId: d.organizacionId,
       rutaRelativa: relativa,
-      nombreOriginal: archivo.name.slice(0, 200),
-      tipoMime: v.mime,
-      tamanoBytes: bytes.byteLength,
+      nombreOriginal: d.nombre.slice(0, 200),
+      tipoMime: d.mime,
+      tamanoBytes: d.bytes.byteLength,
       categoria: d.categoria,
       enlaceId: d.enlaceId ?? null,
       subidoPor: d.subidoPor ?? null,

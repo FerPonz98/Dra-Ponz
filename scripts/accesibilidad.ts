@@ -24,7 +24,7 @@ async function main() {
   const portal = await uno("select e.token, cl.ci from enlaces_portal e join propuestas pr on pr.id=e.referencia_id join clientes cl on cl.id=pr.cliente_id where e.token is not null and e.metodo='ci' and pr.aceptada_en is not null order by e.creado_en desc limit 1");
   await c.end();
 
-  const rutasPanel = ["/panel", "/panel/cobros/clientes", "/panel/cobros/planes", "/panel/cobros/recordatorios", "/panel/cobros/pagos", "/panel/tesis/propuestas", "/panel/tesis/propuestas/nueva", "/panel/tesis/calendario", "/panel/configuracion", "/panel/usuarios", ...(plan ? [`/panel/cobros/planes/${plan.id}`] : []), ...(prop ? [`/panel/tesis/propuestas/${prop.id}`] : [])];
+  const rutasPanel = ["/panel", "/panel/cobros/clientes", "/panel/cobros/planes", "/panel/cobros/recordatorios", "/panel/cobros/pagos", "/panel/tesis/propuestas", "/panel/tesis/propuestas/nueva", "/panel/tesis/calendario", "/panel/configuracion", "/panel/configuracion/apariencia", "/panel/usuarios", ...(plan ? [`/panel/cobros/planes/${plan.id}`] : []), ...(prop ? [`/panel/tesis/propuestas/${prop.id}`] : [])];
   const nav = await chromium.launch();
   let graves = 0;
   const revisar = async (page: Page, nombre: string) => {
@@ -49,11 +49,20 @@ async function main() {
     }
     await ctx.close();
   }
-  // Con movimiento reducido no hay animación de aparición (axe mediría elementos aún transparentes).
+  // Con movimiento reducido la aparición es solo un fundido: se recorre la página y se espera a que
+  // todo sea visible (axe mediría como ilegibles los elementos aún transparentes).
   const ctx = await nav.newContext({ viewport: { width: 375, height: 812 }, reducedMotion: "reduce" });
   const page = await ctx.newPage();
   for (const r of ["/es", "/pt"]) {
     await page.goto(`${base}${r}`);
+    await page.evaluate(async () => {
+      for (let y = 0; y < document.body.scrollHeight; y += 400) {
+        window.scrollTo(0, y);
+        await new Promise((ok) => setTimeout(ok, 60));
+      }
+      window.scrollTo(0, 0);
+    });
+    await page.waitForTimeout(1000);
     await revisar(page, `[celular] ${r}`);
   }
   if (portal) {

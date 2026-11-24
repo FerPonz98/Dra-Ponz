@@ -17,8 +17,8 @@ async function main() {
   await c.query(`GRANT USAGE ON SCHEMA public TO ${ident}`);
   await c.query(`GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ${ident}`);
   await c.query(`GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO ${ident}`);
-  // Las tablas de autenticación solo las usa el rol dueño (Better Auth).
-  await c.query(`REVOKE ALL ON usuarios, sesiones, cuentas, verificaciones FROM ${ident}`);
+  // Las tablas de autenticación (y sus límites/bloqueos) solo las usa el rol dueño (Better Auth).
+  await c.query(`REVOKE ALL ON usuarios, sesiones, cuentas, verificaciones, limites_auth, intentos_login FROM ${ident}`);
   await c.end();
   console.log("Migraciones aplicadas.");
 }

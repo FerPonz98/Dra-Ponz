@@ -37,7 +37,7 @@ export function FormCliente({ id, inicial, alGuardar }: { id?: string; inicial?:
   }
 
   return (
-    <form onSubmit={handleSubmit(enviar)} className="grid gap-4 sm:grid-cols-2" noValidate>
+    <form method="post" onSubmit={handleSubmit(enviar)} className="grid gap-4 sm:grid-cols-2" noValidate>
       <Campo etiqueta="Nombre completo" htmlFor="c-nombre" error={e.nombre?.message} className="sm:col-span-2">
         <Input id="c-nombre" autoComplete="off" aria-invalid={!!e.nombre} {...register("nombre")} />
       </Campo>

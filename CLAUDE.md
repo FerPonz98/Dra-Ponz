@@ -13,5 +13,6 @@ Especificación: `PROMPT_cobros_tesis.md`. Avance: `PROGRESO.md`. Decisiones: `D
 - Consultas de negocio SIEMPRE con `withOrg(orgId, tx => …)` (RLS). `withAdmin`/`dbAdmin` solo para auth, superadmin, jobs y tokens del portal.
 - `src/modules/cobros` nunca importa de `src/modules/tesis` (ESLint lo impide). `core`/`lib` no importan módulos.
 - Tablas/columnas en español snake_case. Dinero en centavos (`integer`). Fechas de negocio como `date` (texto YYYY-MM-DD) en America/La_Paz.
-- Nueva tabla con `organizacion_id` → nueva migración custom con `SELECT aplicar_rls();`.
+- Nueva tabla con `organizacion_id` → nueva migración custom con `SELECT aplicar_rls();` y, si tiene FK a otra tabla de negocio, `SELECT aplicar_fk_misma_organizacion();` (las FK no pasan por RLS).
+- Seguridad: CSP con nonce en `src/proxy.ts`; límites en `src/lib/seguridad.ts` y Nginx; pruebas en `tests/unit/seguridad.test.ts` y `tests/e2e/seguridad.spec.ts` (ver `SEGURIDAD_Y_CARGA.md`).
 - Entradas validadas con Zod en el servidor.

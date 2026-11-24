@@ -31,8 +31,10 @@ export async function planesConSesionPortal(): Promise<Set<string>> {
     if (!c.name.startsWith("portal_")) continue;
     const enlaceId = c.value.split(".")[0];
     if (!/^[0-9a-f-]{36}$/i.test(enlaceId) || !verificarSesionPortal(c.value, enlaceId)) continue;
-    const [e] = await dbAdmin().select({ planId: enlacesPortal.planId, token: enlacesPortal.token }).from(enlacesPortal).where(eq(enlacesPortal.id, enlaceId));
-    if (e?.token) planes.add(e.planId);
+    // Mismas reglas que resolverToken: enlace no anulado, no vencido y organización activa.
+    const [e] = await dbAdmin().select({ token: enlacesPortal.token }).from(enlacesPortal).where(eq(enlacesPortal.id, enlaceId));
+    const r = e?.token ? await resolverToken(e.token) : null;
+    if (r && r.enlace.id === enlaceId) planes.add(r.enlace.planId);
   }
   return planes;
 }

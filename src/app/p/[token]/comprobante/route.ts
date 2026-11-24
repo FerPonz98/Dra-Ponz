@@ -1,7 +1,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { mensajeDeError } from "@/lib/acciones";
+import { estadoDeError, mensajeDeError } from "@/lib/acciones";
 import { withOrg } from "@/lib/db";
+import { exigirLimite, exigirMismoOrigen } from "@/lib/seguridad";
 import { hoyEnZona } from "@/lib/fechas";
 import { registrarPago } from "@/modules/cobros/servicios/pagos";
 import { exigirPortal } from "../../sesion";
@@ -12,6 +13,8 @@ const LIMITE_PETICION = 52 * 1024 * 1024;
 export async function POST(req: Request, ctx: { params: Promise<{ token: string }> }) {
   const { token } = await ctx.params;
   try {
+    exigirMismoOrigen(req);
+    exigirLimite(req.headers, "subida-comprobante", 20);
     if (Number(req.headers.get("content-length") ?? 0) > LIMITE_PETICION) throw new Error("El archivo supera el límite de 50 MB.");
     const r = await exigirPortal(token);
     const fd = await req.formData();
@@ -22,6 +25,6 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
     revalidatePath(`/p/${token}`);
     return Response.json({ ok: true, mensaje: "¡Comprobante enviado! Te avisaremos cuando sea aprobado." });
   } catch (e) {
-    return Response.json({ ok: false, mensaje: mensajeDeError(e) }, { status: 400 });
+    return Response.json({ ok: false, mensaje: mensajeDeError(e) }, { status: estadoDeError(e) });
   }
 }

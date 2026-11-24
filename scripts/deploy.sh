@@ -4,6 +4,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+echo "▶ permisos: .env y archivos subidos solo para el usuario de la app"
+chmod 600 .env
+[ -n "${UPLOAD_DIR:-}" ] && [ -d "$UPLOAD_DIR" ] && chmod 750 "$UPLOAD_DIR" || true
+
 echo "▶ git pull"
 git pull --ff-only
 

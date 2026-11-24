@@ -3,6 +3,7 @@ import {
   bigint,
   boolean,
   index,
+  integer,
   jsonb,
   pgTable,
   primaryKey,
@@ -20,6 +21,7 @@ export const organizaciones = pgTable("organizaciones", {
   slug: text("slug").notNull().unique(),
   nombre: text("nombre").notNull(),
   logoArchivoId: uuid("logo_archivo_id"),
+  isotipoArchivoId: uuid("isotipo_archivo_id"),
   qrArchivoId: uuid("qr_archivo_id"),
   colorPrimario: text("color_primario").notNull().default("#1d4ed8"),
   colorSecundario: text("color_secundario").notNull().default("#0f172a"),
@@ -158,4 +160,41 @@ export const alertasSistema = pgTable("alertas_sistema", {
   mensaje: text("mensaje").notNull(),
   resuelta: boolean("resuelta").notNull().default(false),
   creadoEn: creadoEn(),
+});
+
+// ───────────── Tema visual por organización (landing y portal) ─────────────
+// Una fila por organización. Si no hay fila, la landing usa TEMA_POR_DEFECTO y el portal/panel el diseño de la plataforma.
+export const organizacionTema = pgTable("organizacion_tema", {
+  organizacionId: uuid("organizacion_id")
+    .primaryKey()
+    .references(() => organizaciones.id, { onDelete: "cascade" }),
+  colorPrimario: text("color_primario").notNull(),
+  colorSecundario: text("color_secundario").notNull(),
+  colorAcento: text("color_acento").notNull(),
+  colorFondo: text("color_fondo").notNull(),
+  colorTexto: text("color_texto").notNull(),
+  fuenteTitulos: text("fuente_titulos").notNull(),
+  fuenteTexto: text("fuente_texto").notNull(),
+  radioBordes: text("radio_bordes").notNull(),
+  preset: text("preset"),
+  /** Intro animada al entrar a la landing (solo la primera visita de la sesión). */
+  introActiva: boolean("intro_activa").notNull().default(true),
+  actualizadoEn: timestamp("actualizado_en", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ───────────── Seguridad del acceso (solo rol dueño; sin organización) ─────────────
+// Límite de peticiones de Better Auth en la BD: vale para todos los procesos (PM2 en cluster) y sobrevive reinicios.
+export const limitesAuth = pgTable("limites_auth", {
+  id: text("id").primaryKey(),
+  key: text("clave").notNull().unique(),
+  count: integer("conteo").notNull(),
+  lastRequest: bigint("ultima_peticion", { mode: "number" }).notNull(),
+});
+
+// Bloqueo por cuenta: N intentos fallidos con el mismo correo (desde cualquier IP) → bloqueo temporal.
+export const intentosLogin = pgTable("intentos_login", {
+  correo: text("correo").primaryKey(),
+  fallidos: integer("fallidos").notNull().default(0),
+  bloqueadoHasta: timestamp("bloqueado_hasta", { withTimezone: true }),
+  actualizadoEn: timestamp("actualizado_en", { withTimezone: true }).notNull().defaultNow(),
 });

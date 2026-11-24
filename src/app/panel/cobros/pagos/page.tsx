@@ -44,7 +44,7 @@ export default async function PagosPage(props: { searchParams: Promise<{ hecho?:
               const url = r.pago.comprobanteArchivoId ? `/api/archivos/${r.pago.comprobanteArchivoId}` : null;
               return (
                 <Card key={r.pago.id} data-testid="comprobante-pendiente" className="flex flex-col overflow-hidden">
-                  <a href={url ?? undefined} target="_blank" rel="noopener" className="flex h-40 items-center justify-center border-b border-border bg-surface-2" aria-label={`Abrir comprobante de ${r.cliente.nombre}`}>
+                  <a href={url ?? undefined} target="_blank" rel="noopener" className="flex h-40 items-center justify-center border-b border-border bg-surface-2" aria-label={url && mime?.startsWith("image/") ? `Abrir comprobante de ${r.cliente.nombre}` : `Comprobante PDF de ${r.cliente.nombre}`}>
                     {url && mime?.startsWith("image/") ? (
                       // eslint-disable-next-line @next/next/no-img-element -- imagen privada servida por ruta autenticada
                       <img src={url} alt="" className="size-full object-contain" loading="lazy" />

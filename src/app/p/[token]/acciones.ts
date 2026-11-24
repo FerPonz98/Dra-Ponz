@@ -1,10 +1,19 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { DemasiadasPeticiones, exigirLimite } from "@/lib/seguridad";
 import type { Resultado } from "@/lib/acciones";
 import { intentarAcceso } from "@/modules/cobros/servicios/enlaces";
 import { abrirSesionPortal, sesionPortal } from "../sesion";
 
 export async function accionAccederPortal(token: string, _: Resultado | null, fd: FormData): Promise<Resultado> {
+  try {
+    // Además del bloqueo por enlace (5 intentos, en la BD): 20 intentos por minuto por IP contra cualquier enlace.
+    exigirLimite(await headers(), "portal-acceso", 20);
+  } catch (e) {
+    if (e instanceof DemasiadasPeticiones) return { ok: false, mensaje: e.message };
+    throw e;
+  }
   const { resuelto } = await sesionPortal(token);
   if (!resuelto) return { ok: false, mensaje: "El enlace no está disponible." };
   const valor = String(fd.get("credencial") ?? "");

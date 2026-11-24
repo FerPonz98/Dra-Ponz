@@ -38,7 +38,7 @@ function Formulario() {
       </div>
     );
   return (
-    <form onSubmit={enviar} className="space-y-5">
+    <form method="post" onSubmit={enviar} className="space-y-5">
       {estado === "error" && <Aviso tipo="error">{mensaje}</Aviso>}
       <Campo etiqueta="Nueva contraseña" htmlFor="nueva" ayuda="Mínimo 8 caracteres.">
         <Input id="nueva" name="nueva" type="password" autoComplete="new-password" required />

@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, lt, notExists, sql } from "drizzle-orm";
 import { guardarArchivo, type TipoArchivo } from "@/core/archivos";
 import { archivos } from "@/core/db/schema";
 import type { Ejecutor } from "@/lib/db";
@@ -36,6 +36,21 @@ export async function registrarPago(tx: Ejecutor, d: { organizacionId: string; p
   if (m.cuota.estado === "pagada") throw new Error("Esta cuota ya está pagada");
   const [pend] = await tx.select({ id: pagos.id }).from(pagos).where(and(eq(pagos.cuotaId, d.cuotaId), eq(pagos.estado, "pendiente")));
   if (pend) throw new Error("Ya enviaste un comprobante para esta cuota; está en revisión.");
+  // Las cuotas se pagan en orden: no se puede saltar la 1.ª (ni ninguna anterior sin pagar o sin comprobante en revisión).
+  const anteriores = await tx
+    .select({ numero: cuotas.numero })
+    .from(cuotas)
+    .where(
+      and(
+        eq(cuotas.planId, d.planId),
+        lt(cuotas.numero, m.cuota.numero),
+        eq(cuotas.estado, "pendiente"),
+        notExists(tx.select({ x: pagos.id }).from(pagos).where(and(eq(pagos.cuotaId, cuotas.id), eq(pagos.estado, "pendiente")))),
+      ),
+    )
+    .orderBy(asc(cuotas.numero))
+    .limit(1);
+  if (anteriores.length) throw new Error(`Primero paga la cuota ${anteriores[0].numero}.`);
   const archivo = await guardarArchivo(tx, { organizacionId: d.organizacionId, categoria: "comprobantes", archivo: d.archivo, permitidos: TIPOS_COMPROBANTE, enlaceId: d.enlaceId });
   const [p] = await tx
     .insert(pagos)

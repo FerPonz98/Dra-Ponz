@@ -35,7 +35,7 @@ export default function RecuperarPage() {
             <h1 className="text-2xl font-semibold tracking-tight">Recuperar contraseña</h1>
             <p className="text-sm text-muted-foreground">Escribe tu correo y te enviaremos un enlace para crear una nueva.</p>
           </div>
-          <form onSubmit={enviar} className="space-y-5">
+          <form method="post" onSubmit={enviar} className="space-y-5">
             <Campo etiqueta="Correo" htmlFor="correo">
               <Input id="correo" name="correo" type="email" required autoComplete="email" autoFocus />
             </Campo>

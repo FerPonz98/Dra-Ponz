@@ -33,12 +33,11 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
 
   const datos = await leerArchivo(archivo.rutaRelativa).catch(() => null);
   if (!datos) return new Response("Archivo no disponible", { status: 404 });
-  const enLinea = archivo.tipoMime.startsWith("image/") || archivo.tipoMime === "application/pdf";
   return new Response(new Uint8Array(datos), {
     headers: {
       "Content-Type": archivo.tipoMime,
       "Content-Length": String(datos.byteLength),
-      "Content-Disposition": `${enLinea ? "inline" : "attachment"}; filename*=UTF-8''${encodeURIComponent(archivo.nombreOriginal)}`,
+      "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(archivo.nombreOriginal)}`,
       "Cache-Control": "private, no-store",
       "X-Content-Type-Options": "nosniff",
       "Content-Security-Policy": "sandbox; default-src 'none'; img-src 'self'; style-src 'unsafe-inline'",
