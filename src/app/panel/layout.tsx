@@ -40,6 +40,7 @@ const GRUPOS: { titulo: string; items: Item[] }[] = [
       { href: "/panel/usuarios", etiqueta: "Usuarios y roles", icono: "usuarios", permiso: "usuarios:gestionar" },
     ],
   },
+  { titulo: "Ayuda", items: [{ href: "/panel/ayuda", etiqueta: "Ayuda", icono: "ayuda" }] },
 ];
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {

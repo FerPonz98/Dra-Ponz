@@ -4,11 +4,13 @@ import {
   CalendarDays,
   ChevronsLeft,
   ChevronsRight,
+  CircleHelp,
   FileStack,
   FileText,
   Globe,
   GraduationCap,
   Home,
+  KeyRound,
   LayoutGrid,
   LogOut,
   Menu as IconoMenu,
@@ -49,6 +51,7 @@ export const ICONOS = {
   apariencia: Palette,
   usuarios: UsersRound,
   documento: FileText,
+  ayuda: CircleHelp,
 } satisfies Record<string, LucideIcon>;
 export type NombreIcono = keyof typeof ICONOS;
 
@@ -253,8 +256,18 @@ export function ShellPanel({
                   {oscuro ? <Sun /> : <Moon />} {oscuro ? "Modo claro" : "Modo oscuro"}
                 </MenuItem>
                 <MenuItem asChild>
+                  <Link href="/panel/cuenta">
+                    <KeyRound /> Mi cuenta y contraseña
+                  </Link>
+                </MenuItem>
+                <MenuItem asChild>
                   <Link href="/panel/configuracion">
                     <Settings /> Organización
+                  </Link>
+                </MenuItem>
+                <MenuItem asChild>
+                  <Link href="/panel/ayuda">
+                    <CircleHelp /> Ayuda
                   </Link>
                 </MenuItem>
                 <MenuSeparador />

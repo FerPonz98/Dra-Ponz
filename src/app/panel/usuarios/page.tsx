@@ -16,7 +16,7 @@ export default async function UsuariosPage() {
   const rolesSimple = rolesOrg.map((r) => ({ id: r.id, nombre: r.nombre, permisos: r.permisos, esAdmin: r.esAdmin }));
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <EncabezadoPagina titulo="Usuarios y roles" descripcion="Quién entra al panel y qué puede hacer en cada módulo." />
+      <EncabezadoPagina ayuda="usuarios" titulo="Usuarios y roles" descripcion="Quién entra al panel y qué puede hacer en cada módulo." />
       <Card>
         <CardHeader>
           <CardTitle>Usuarios</CardTitle>

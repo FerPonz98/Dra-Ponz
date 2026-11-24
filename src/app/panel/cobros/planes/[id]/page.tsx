@@ -17,6 +17,8 @@ import { BotonWhatsApp } from "@/modules/cobros/componentes/boton-whatsapp";
 import { mensajeParaPlan } from "@/app/panel/cobros/mensajes";
 import { EdicionPlan } from "./edicion-plan";
 import { EnlacesPlan } from "./enlaces-plan";
+import { BotonEliminar } from "@/components/panel/boton-eliminar";
+import { accionEliminarPlan } from "@/app/panel/eliminar-acciones";
 
 export default async function PlanPage(props: { params: Promise<{ id: string }> }) {
   const ctx = await requerirModulo("cobros", "cobros:ver");
@@ -42,7 +44,7 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
 
   return (
     <div>
-      <EncabezadoPagina
+      <EncabezadoPagina ayuda="cobros"
         migas={<Migas items={[{ etiqueta: "Planes de pago", href: "/panel/cobros/planes" }, { etiqueta: p.plan.titulo }]} />}
         titulo={p.plan.titulo}
         descripcion={
@@ -67,6 +69,14 @@ export default async function PlanPage(props: { params: Promise<{ id: string }> 
           <>
             <BadgeMora estado={p.plan.estadoMora} />
             {datos.mensaje && <BotonWhatsApp numero={p.cliente.whatsapp} mensaje={datos.mensaje} size="default" />}
+            {editable && p.plan.origen !== "tesis" && (
+              <BotonEliminar
+                etiqueta="Eliminar plan"
+                titulo="¿Eliminar este plan de pagos?"
+                descripcion={`Se borran sus ${p.cuotas.length} cuotas, los pagos, los comprobantes y el enlace del portal de ${p.cliente.nombre}. El cliente no se borra. No se puede deshacer.`}
+                accion={accionEliminarPlan.bind(null, p.plan.id)}
+              />
+            )}
           </>
         }
       />

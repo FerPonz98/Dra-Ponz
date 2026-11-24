@@ -2,6 +2,7 @@ import { ArrowRight, FileStack, Plus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requerirModulo } from "@/core/contexto";
+import { Aviso } from "@/components/ui/aviso";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EncabezadoPagina, EstadoVacio } from "@/components/ui/varios";
@@ -10,7 +11,8 @@ import { listarFormularios } from "@/modules/tesis/servicios/formularios";
 
 export const metadata: Metadata = { title: "Formularios" };
 
-export default async function FormulariosPage() {
+export default async function FormulariosPage(props: { searchParams: Promise<{ eliminado?: string }> }) {
+  const { eliminado } = await props.searchParams;
   const ctx = await requerirModulo("tesis", "tesis:editar");
   const lista = await withOrg(ctx.organizacion.id, (tx) => listarFormularios(tx));
   const boton = (
@@ -22,7 +24,8 @@ export default async function FormulariosPage() {
   );
   return (
     <div>
-      <EncabezadoPagina titulo="Formularios" descripcion="Formularios reutilizables para recolectar datos y archivos del estudiante. Se eligen en el paso 8 de cada propuesta." acciones={lista.length > 0 && boton} />
+      <EncabezadoPagina ayuda="formularios" titulo="Formularios" descripcion="Formularios reutilizables para recolectar datos y archivos del estudiante. Se eligen en el paso 8 de cada propuesta." acciones={lista.length > 0 && boton} />
+      {eliminado && <Aviso tipo="exito" className="mb-4">Formulario eliminado.</Aviso>}
       {lista.length === 0 ? (
         <Card>
           <EstadoVacio icono={FileStack} titulo="Crea tu primer formulario" descripcion="Textos, fechas, opciones y archivos (PDF, Word, Excel o ZIP de hasta 50 MB)." accion={boton} />

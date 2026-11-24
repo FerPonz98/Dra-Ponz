@@ -17,7 +17,7 @@ export default async function CalendarioPage() {
   ];
   return (
     <div className="space-y-4">
-      <EncabezadoPagina titulo="Calendario" descripcion="Actividades de los cronogramas y fechas de cobro de tus proyectos. Haz clic en un evento para ver el detalle." />
+      <EncabezadoPagina ayuda="cronograma-calendario" titulo="Calendario" descripcion="Actividades de los cronogramas y fechas de cobro de tus proyectos. Haz clic en un evento para ver el detalle." />
       <ul className="flex flex-wrap gap-x-4 gap-y-2 rounded-xl border border-border bg-surface px-4 py-3 text-xs text-muted-foreground shadow-xs" aria-label="Leyenda de colores">
         {leyenda.map(([t, c]) => (
           <li key={t} className="flex items-center gap-1.5">

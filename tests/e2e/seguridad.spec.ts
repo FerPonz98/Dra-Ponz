@@ -406,3 +406,29 @@ test.describe("Seguridad · archivos, permisos, inyecciones y dinero (panel)", (
     await cp.close();
   });
 });
+
+test.describe("Seguridad · ayuda y manuales", () => {
+  test("las imágenes del manual no permiten salir de su carpeta; el manual de la Dra. pide sesión; la guía del estudiante es pública", async ({ request, browser }) => {
+    for (const ruta of ["/ayuda/img/..%2f..%2f.env", "/ayuda/img/..%5C..%5Cpackage.json", "/ayuda/img/x.svg", "/ayuda/img/no-existe.png", "/ayuda/pdf/..%2f.env"]) {
+      expect((await request.get(ruta)).status(), ruta).toBe(404);
+    }
+    const img = await request.get("/ayuda/img/inicio-panel.png");
+    expect(img.status()).toBe(200);
+    expect(img.headers()["content-type"]).toBe("image/png");
+    expect(img.headers()["x-content-type-options"]).toBe("nosniff");
+    // Manual de la Dra.: sin sesión no existe (404); con sesión, sí.
+    expect((await request.get("/ayuda/pdf/manual-dra-ponz.pdf")).status()).toBe(404);
+    expect((await request.get("/panel/ayuda", { maxRedirects: 0 })).status()).toBe(307);
+    const { ctx, page } = await contextoNuevo(browser);
+    await iniciarSesion(page, "dra");
+    await page.goto("/panel/ayuda");
+    await expect(page.getByRole("heading", { name: "Ayuda", exact: true })).toBeVisible();
+    expect((await page.request.get("/ayuda/pdf/manual-dra-ponz.pdf")).status()).toBe(200);
+    await ctx.close();
+    // Guía del estudiante: pública, sin indexar.
+    const guia = await request.get("/ayuda/estudiante?idioma=pt");
+    expect(guia.status()).toBe(200);
+    expect(await guia.text()).toContain('name="robots" content="noindex, nofollow"');
+    expect((await request.get("/ayuda/pdf/guia-estudiante-es.pdf")).status()).toBe(200);
+  });
+});

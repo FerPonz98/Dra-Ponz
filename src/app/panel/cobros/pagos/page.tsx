@@ -25,7 +25,7 @@ export default async function PagosPage(props: { searchParams: Promise<{ hecho?:
   }));
   return (
     <div className="space-y-6">
-      <EncabezadoPagina titulo="Comprobantes" descripcion="Revisa cada comprobante y apruébalo para marcar la cuota como pagada." />
+      <EncabezadoPagina ayuda="aprobar-comprobantes" titulo="Comprobantes" descripcion="Revisa cada comprobante y apruébalo para marcar la cuota como pagada." />
       {hecho === "aprobado" && <Aviso tipo="exito">Pago aprobado.</Aviso>}
       {hecho === "rechazado" && <Aviso tipo="info">Pago rechazado. El cliente verá el motivo en su portal.</Aviso>}
 

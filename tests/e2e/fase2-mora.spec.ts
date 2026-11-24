@@ -21,6 +21,8 @@ test.describe("Fase 2 · mora, recordatorios, plantillas y jobs", () => {
     await page.getByLabel("Nombre completo").fill(`Moroso ${id}`);
     await page.getByLabel("Celular WhatsApp (con código de país)").fill("59170000001");
     await page.getByRole("button", { name: "Agregar cliente" }).click();
+    // La lista pagina de a 15: se busca por nombre para no depender de cuántos clientes haya.
+    await page.getByLabel("Buscar por nombre, CI, celular o correo").fill(`Moroso ${id}`);
     await page.getByRole("link", { name: `Moroso ${id}` }).click();
     await page.getByRole("link", { name: "Nuevo plan de pagos" }).click();
     await page.getByLabel("Concepto", { exact: true }).fill(`Mora ${id}`);

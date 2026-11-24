@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineaTiempo } from "@/components/ui/linea-tiempo";
 import { ListaPestanas, PanelPestana, Pestana, Pestanas } from "@/components/ui/tabs";
-import { AnilloProgreso, Avatar, EstadoVacio, Migas } from "@/components/ui/varios";
+import { AnilloProgreso, Avatar, BotonAyuda, EstadoVacio, Migas } from "@/components/ui/varios";
 import { withOrg } from "@/lib/db";
 import { formatoMoneda } from "@/lib/dinero";
 import { formatoFecha, sumarMeses } from "@/lib/fechas";
@@ -22,6 +22,8 @@ import { BadgeEstadoProyecto } from "@/modules/tesis/componentes/estado";
 import { avance, mesActual, rangoMes } from "@/modules/tesis/dominio/cronograma";
 import { ESTADOS_ACTIVOS, ESTADOS_EDITABLES } from "@/modules/tesis/dominio/estados";
 import { obtenerProyecto, sincronizarProyecto } from "@/modules/tesis/servicios/propuestas";
+import { BotonEliminar } from "@/components/panel/boton-eliminar";
+import { accionEliminarPropuesta } from "@/app/panel/eliminar-acciones";
 import { AccionesProyecto, BotonAprobar, BotonRevision, CasillaActividad, EnviarPropuesta, Notas, NuevoCronograma } from "./ficha-cliente";
 
 const PESTANAS = ["resumen", "cuotas", "cronograma", "archivos", "historial"] as const;
@@ -74,7 +76,10 @@ export default async function FichaProyectoPage(props: { params: Promise<{ id: s
             </Badge>
             {pr.aceptadaEn && <BadgeMora estado={p.plan.plan.estadoMora} />}
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-balance">{pr.titulo}</h1>
+          <h1 className="flex items-start gap-1.5 text-2xl font-semibold tracking-tight text-balance">
+            {pr.titulo}
+            <BotonAyuda seccion="ficha-proyecto" className="mt-0.5" />
+          </h1>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
             <span className="flex items-center gap-2">
               <Avatar nombre={p.cliente.nombre} className="size-6 text-[10px]" />
@@ -153,6 +158,14 @@ export default async function FichaProyectoPage(props: { params: Promise<{ id: s
                   <Button asChild variant="ghost" size="sm">
                     <Link href={`/panel/cobros/planes/${pr.planId}`}>Plan de pagos en Cobros</Link>
                   </Button>
+                  {editable && (
+                    <BotonEliminar
+                      etiqueta="Eliminar"
+                      titulo="¿Eliminar esta propuesta?"
+                      descripcion={`Se borra «${pr.titulo}» con su cronograma, revisiones, extras, archivos, respuestas y su plan de pagos (cuotas, pagos y comprobantes). El enlace deja de funcionar. El estudiante queda en Clientes. No se puede deshacer.`}
+                      accion={accionEliminarPropuesta.bind(null, pr.id)}
+                    />
+                  )}
                 </>
               }
             >

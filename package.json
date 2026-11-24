@@ -25,7 +25,10 @@
     "worker": "node dist-prod/worker.mjs",
     "seed:prod": "node dist-prod/seed-prod.mjs",
     "backup:restaurar": "node dist-prod/restaurar.mjs",
-    "migrar:prod": "node dist-prod/migrar.mjs"
+    "migrar:prod": "node dist-prod/migrar.mjs",
+    "usuario:clave": "node dist-prod/restablecer-clave.mjs",
+    "manual:capturas": "tsx scripts/manual/capturas.ts",
+    "manual:pdf": "tsx scripts/manual/pdf.ts"
   },
   "dependencies": {
     "@fullcalendar/react": "^7.1.5",

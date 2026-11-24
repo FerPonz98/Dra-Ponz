@@ -53,7 +53,7 @@ export default async function PanelPage() {
 
   return (
     <div className="space-y-6">
-      <EncabezadoPagina
+      <EncabezadoPagina ayuda="conocer-el-panel"
         titulo={`${saludo(zona)}, ${nombre}`}
         descripcion={<span className="first-letter:uppercase">{fecha} · {ctx.organizacion.nombre}</span>}
         acciones={

@@ -21,7 +21,7 @@ export default async function RecordatoriosPage() {
   const lista = await withOrg(ctx.organizacion.id, (tx) => recordatoriosDeHoy(tx, hoyDe(ctx)));
   return (
     <div className="space-y-6">
-      <EncabezadoPagina titulo="Para recordar hoy" descripcion="El botón abre WhatsApp con el mensaje ya escrito: solo revísalo y presiona Enviar." />
+      <EncabezadoPagina ayuda="recordatorios" titulo="Para recordar hoy" descripcion="El botón abre WhatsApp con el mensaje ya escrito: solo revísalo y presiona Enviar." />
       {lista.length === 0 && (
         <Card>
           <EstadoVacio icono={PartyPopper} titulo="Todo al día" descripcion="Hoy no hay cuotas para recordar. ¡Buen trabajo!" />

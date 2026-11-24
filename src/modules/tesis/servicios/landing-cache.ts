@@ -30,7 +30,7 @@ export async function organizacionDeLandingCacheada(host: string | null): Promis
 export const datosLanding = cache((organizacionId: string, idioma: Idioma) =>
   withOrg(organizacionId, async (tx) => {
     // Marca (logo/isotipo subidos) leída fresca: RLS deja ver solo la propia organización.
-    const [o] = await tx.select({ id: organizaciones.id, slug: organizaciones.slug, nombre: organizaciones.nombre, logoArchivoId: organizaciones.logoArchivoId, isotipoArchivoId: organizaciones.isotipoArchivoId }).from(organizaciones);
+    const [o] = await tx.select({ id: organizaciones.id, slug: organizaciones.slug, nombre: organizaciones.nombre, logoArchivoId: organizaciones.logoArchivoId, isotipoArchivoId: organizaciones.isotipoArchivoId, fotoLandingArchivoId: organizaciones.fotoLandingArchivoId }).from(organizaciones);
     return { contenido: await contenidoLanding(tx, idioma), tema: await temaGuardado(tx), marca: o };
   }),
 );

@@ -1,5 +1,6 @@
 import { access, constants, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { isAbsolute, join, normalize, resolve, sep } from "node:path";
+import { inArray } from "drizzle-orm";
 import { archivos } from "@/core/db/schema";
 import type { Ejecutor } from "@/lib/db";
 
@@ -146,4 +147,17 @@ export async function verificarDirectorioSubidas() {
     throw new Error(`UPLOAD_DIR "${dir}" no se puede escribir. Revisa los permisos del volumen (el contenedor corre como el usuario "nextjs", uid 1001).`);
   }
   return dir;
+}
+
+/** Borra las filas de archivos (con RLS del tx) y devuelve sus rutas para quitarlas del disco DESPUÉS del commit. */
+export async function quitarFilasArchivos(tx: Ejecutor, ids: (string | null | undefined)[]): Promise<string[]> {
+  const lista = [...new Set(ids.filter((x): x is string => !!x))];
+  if (!lista.length) return [];
+  const r = await tx.delete(archivos).where(inArray(archivos.id, lista)).returning({ ruta: archivos.rutaRelativa });
+  return r.map((x) => x.ruta);
+}
+
+/** Quita archivos del disco (sin fallar si alguno ya no está). Llamar cuando la transacción ya se confirmó. */
+export async function borrarDelDisco(rutas: string[]) {
+  for (const r of rutas) await rm(rutaSegura(r), { force: true }).catch(() => undefined);
 }

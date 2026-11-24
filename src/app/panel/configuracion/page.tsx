@@ -11,7 +11,7 @@ export default async function ConfiguracionPage() {
   const o = ctx.organizacion;
   return (
     <div className="mx-auto max-w-4xl">
-      <EncabezadoPagina titulo="Organización" descripcion="Datos de tu negocio y lo que ven tus clientes al pagar." />
+      <EncabezadoPagina ayuda="configurar-cuenta" titulo="Organización" descripcion="Datos de tu negocio y lo que ven tus clientes al pagar." />
       <Card>
         <CardHeader>
           <CardTitle>Datos, marca y cobro</CardTitle>

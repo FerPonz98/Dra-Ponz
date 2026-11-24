@@ -13,7 +13,7 @@ export default async function NuevoPlanPage(props: { searchParams: Promise<{ cli
   const clientes = await withOrg(ctx.organizacion.id, (tx) => listarClientes(tx));
   return (
     <div>
-      <EncabezadoPagina
+      <EncabezadoPagina ayuda="cobros"
         migas={<Migas items={[{ etiqueta: "Planes de pago", href: "/panel/cobros/planes" }, { etiqueta: "Nuevo plan" }]} />}
         titulo="Nuevo plan de pagos"
         descripcion="Genera las cuotas automáticamente y ajusta cada monto o fecha si lo necesitas."

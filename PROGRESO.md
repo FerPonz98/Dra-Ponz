@@ -241,3 +241,78 @@ migraciones y rol de la app, worker de crons y backups cifrados, `seed:prod`, va
 modo producción (sin Docker) con `cobra_app_test` temporal: migraciones idempotentes, seed, login, subida de 40 MB y
 rechazo de 51 MB, jobs, lock entre réplicas, backup, restauración y fallos claros de configuración. Revisión:
 typecheck, lint, build, 88/88 tests, 51/51 e2e.
+
+## Manual de usuario ✅
+
+**Hecho**
+- Tres manuales en `docs/manual/` (Markdown + PDF con portada de marca, índice con números de página y capturas):
+  `Manual-Dra-Ponz` (15 secciones, 60 págs.), `Guia-Estudiante-ES` y `Guia-Estudiante-PT` (6 págs. de contenido, celular)
+  y `Manual-Tecnico` (Easypanel, variables, backups, restaurar, contraseñas, logs, fallas).
+- Capturas reproducibles: `npm run manual:capturas` recrea la base **cobra_app_demo** con datos ficticios, compila, levanta
+  la app en el puerto 3200 y recorre cada paso del manual con Playwright (panel 1440 px, portal 390 px) con recuadros
+  numerados y flechas → `docs/manual/img/` (~95 capturas). `npm run manual:pdf` genera los 4 PDF.
+- Ayuda dentro del sistema: **Ayuda** en el menú del panel (manual navegable con índice y buscador sin tildes), ícono
+  **?** junto al título de cada pantalla principal que lleva a su sección, y botón **¿Necesitas ayuda?** en el portal
+  (abre `/ayuda/estudiante`, ES/PT, también desde «Enlace no disponible»). PDF descargables desde ambas.
+- Nuevo comando de producción `npm run usuario:clave -- correo` (restablece una contraseña desde la consola: el manual
+  técnico lo necesitaba y no existía otra vía si el correo no está configurado).
+
+**Revisión del manual contra el sistema** (recorrido automatizado de cada paso; el manual se corrigió donde no coincidía)
+- No existe «cambiar contraseña» dentro del panel: el manual explica cómo hacerlo con «¿Olvidaste tu contraseña?».
+- Corregir el CI de un cliente no cambia el de su enlace (el enlace guarda el CI del día en que se creó): el manual
+  indica generar un enlace nuevo.
+- La vista «Mes» del calendario se satura: el manual recomienda «Lista» para ver los cobros.
+- Tras subir el comprobante de la cuota 1, el portal pasa a mostrar la cuota 2: la guía del estudiante advierte que no
+  la pague todavía.
+
+**Cosas del sistema que pueden confundir a una usuaria** (sin cambiar; para decidir)
+1. **Recordatorios e indicadores de propuestas no aceptadas**: «Para recordar hoy», «Vencido» y «Por cobrar» incluyen
+   cuotas de planes de propuestas en borrador, enviadas o vencidas (nunca aceptadas). La Dra. podría «recordarle» una
+   cuota a alguien que no aceptó. En la demo se movieron esas fechas al futuro para que las capturas no lo muestren.
+2. **Portal tras enviar el comprobante de la 1.ª cuota**: el recuadro sigue titulado «2. Paga la primera cuota con QR»
+   pero ya muestra la cuota 2 con su QR; un estudiante puede pensar que debe pagar otra vez.
+3. **Estado «Enviada» después de que el estudiante aceptó**: pasa a «Aceptada» recién cuando la Dra. aprueba la 1.ª
+   cuota; mientras tanto la lista dice «Enviada» (la ficha sí dice «Aceptada por el estudiante el …»).
+4. ~~No hay «cambiar contraseña» con sesión iniciada~~ → resuelto: **Mi cuenta y contraseña** (ver abajo).
+5. **Un pago aprobado por error no se puede revertir** desde el panel.
+6. **Portal solo en español**, aunque hay estudiantes brasileños (la guía PT traduce cada botón).
+7. **Calendario «Mes»**: las actividades (barras de un mes) tapan los cobros («+ N más»).
+8. **Editor de la landing**: cambiar de idioma sin guardar pierde lo escrito, sin aviso.
+9. **Badges en minúsculas y sin traducir** en revisiones y extras de la ficha (`pendiente`, `solicitada`, `hecha`,
+   `ofrecido`), distintos del resto del panel.
+10. **Botón de WhatsApp «propuesta por vencer»** aparece en la ficha apenas se envía la propuesta, aunque falten días.
+11. Los campos de fecha muestran el formato del idioma del navegador (mm/dd/aaaa en un navegador en inglés).
+
+**Revisión**
+| Paso | Resultado |
+|---|---|
+| typecheck / lint | ✅ 0 errores / 0 avisos |
+| test | ✅ 95/95, incluye `tests/unit/manual.test.ts`: Markdown escapado, `javascript:` bloqueado, nombres de imagen, cada «?» apunta a una sección existente, toda imagen referida existe, guías ES/PT con las mismas secciones |
+| e2e | ✅ 52/52 (3 omitidos por proyecto, como antes); nuevo en `seguridad.spec.ts`: «ayuda y manuales»: sin salida de carpeta en `/ayuda/img`, PDF de la Dra. solo con sesión, guía pública con `noindex` |
+| Capturas | ✅ recorrido completo sin errores contra `cobra_app_demo` |
+
+## Eliminar registros, foto de la landing y cambiar contraseña ✅
+
+**Hecho**
+- **Eliminar** con confirmación (botón rojo en cada ficha): cliente (con sus propuestas, planes, pagos y archivos),
+  plan de pagos suelto (los de tesis se eliminan desde la propuesta), propuesta/proyecto (con su plan) y formulario.
+  Todo en una transacción con RLS + auditoría; los comprobantes y archivos se borran también del disco tras el commit.
+  Aviso «… eliminado» al volver a la lista.
+- **Foto de la portada** desde Tesis → Landing pública: JPG/PNG/WEBP hasta 15 MB, validada por magic bytes,
+  convertida con sharp a WEBP ≤ 900×1200 sin metadatos (sin GPS). Se sirve en `/marca/{org}/foto`; reemplazar o quitar
+  borra la anterior. Migración `0014_foto_landing` (columna `organizaciones.foto_landing_archivo_id`). Si no hay foto
+  subida, sigue valiendo `public/landing/foto-dra.webp` o el dibujo de reemplazo.
+- **«¿Olvidaste tu contraseña?» no enviaba nada**: no hay `RESEND_API_KEY` ni `SMTP_HOST` (los correos solo se guardan
+  en `.data/correos`), y la pantalla igual decía «Revisa tu correo». Ahora avisa «El envío de correos no está activado»
+  cuando falta la configuración, y existe **Mi cuenta y contraseña** (menú del usuario) para cambiarla sin correo.
+  Cómo activar Resend: `docs/manual/Manual-Tecnico.md`, sección 6.1.
+- Manuales y capturas actualizados (eliminar, foto, Mi cuenta).
+
+**Pendiente del usuario**
+- [ ] Cuenta de Resend + dominio verificado + `RESEND_API_KEY` en app y worker (sin esto no salen correos).
+
+**Revisión**
+| Paso | Resultado |
+|---|---|
+| typecheck / lint | ✅ |
+| e2e | ✅ 58/58 (3 omitidos por proyecto). Nuevo `fase9-eliminar-foto-clave.spec.ts` 6/6: borrar plan (y comprobante del disco) y cliente; plan de tesis sin botón; propuesta con su plan; estudiante con sus propuestas; formulario; foto WEBP en la landing, archivo inválido rechazado, quitar → 404; cambiar contraseña (actual incorrecta rechazada) y entrar con la nueva; aviso de correo no configurado |

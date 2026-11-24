@@ -52,7 +52,9 @@ export default async function LandingPage({ params }: Props) {
   const { locale } = await params;
   const { org, c, tema, marca } = await datos(locale);
   const t = await getTranslations({ locale, namespace: "landing" });
-  const hayFoto = existsSync(join(/*turbopackIgnore: true*/ process.cwd(), "public", FOTO));
+  // Foto subida desde el panel (Landing pública); si no hay, la del servidor (public/landing) o el dibujo de reemplazo.
+  const fotoSubida = marca?.fotoLandingArchivoId ? `/marca/${org.id}/foto?v=${marca.fotoLandingArchivoId.slice(0, 8)}` : null;
+  const hayFoto = !fotoSubida && existsSync(join(/*turbopackIgnore: true*/ process.cwd(), "public", FOTO));
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ProfessionalService",
@@ -75,7 +77,7 @@ export default async function LandingPage({ params }: Props) {
         c={c}
         idioma={locale as "es" | "pt"}
         whatsapp={org.whatsapp ?? process.env.WHATSAPP_LANDING ?? ""}
-        fotoUrl={hayFoto ? FOTO : null}
+        fotoUrl={fotoSubida ?? (hayFoto ? FOTO : null)}
         tema={tema}
         org={marca}
         nonce={(await headers()).get("x-nonce") ?? ""}

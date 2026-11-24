@@ -22,6 +22,8 @@ export const organizaciones = pgTable("organizaciones", {
   nombre: text("nombre").notNull(),
   logoArchivoId: uuid("logo_archivo_id"),
   isotipoArchivoId: uuid("isotipo_archivo_id"),
+  // Foto de la portada de la landing (JPG/PNG/WEBP subida en Landing pública; se guarda en WEBP optimizado).
+  fotoLandingArchivoId: uuid("foto_landing_archivo_id"),
   qrArchivoId: uuid("qr_archivo_id"),
   colorPrimario: text("color_primario").notNull().default("#1d4ed8"),
   colorSecundario: text("color_secundario").notNull().default("#0f172a"),

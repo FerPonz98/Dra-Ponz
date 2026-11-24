@@ -21,7 +21,7 @@ export default async function NuevaPropuestaPage() {
   inicial.extras = d.extras.map((x) => ({ nombre: x.nombre, precio: (x.precioCentavos / 100).toFixed(2) }));
   return (
     <div>
-      <EncabezadoPagina migas={<Migas items={[{ etiqueta: "Propuestas y proyectos", href: "/panel/tesis/propuestas" }, { etiqueta: "Nueva propuesta" }]} />} titulo="Nueva propuesta de asesoría" descripcion="Diez pasos cortos. Puedes guardar como borrador en cualquier momento." />
+      <EncabezadoPagina ayuda="crear-propuesta" migas={<Migas items={[{ etiqueta: "Propuestas y proyectos", href: "/panel/tesis/propuestas" }, { etiqueta: "Nueva propuesta" }]} />} titulo="Nueva propuesta de asesoría" descripcion="Diez pasos cortos. Puedes guardar como borrador en cualquier momento." />
       <AsistentePropuesta inicial={inicial} estudiantes={d.estudiantes.map((c) => ({ id: c.id, nombre: c.nombre }))} formularios={d.formularios} hoy={hoy} />
     </div>
   );

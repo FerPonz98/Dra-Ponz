@@ -262,3 +262,25 @@ Cuando el prompt no fue explícito se eligió la opción más simple y segura. A
   exacta (así quedan en el lockfile), y `scripts/docker/nativos-linux.mjs` instala los que falten después de `npm ci`.
   Al actualizar Next, Tailwind o sharp, actualiza también esas versiones. `sharp` pasó a ser dependencia explícita
   (lo usa `next/image` en producción).
+
+## Manual de usuario
+
+- **Fuente única en Markdown** (`docs/manual/*.md`): de ahí salen la ayuda del panel, la guía pública del estudiante y
+  los PDF. Renderizador propio y mínimo (`src/lib/markdown.ts`, sin dependencias nuevas) que **escapa todo** (no admite
+  HTML crudo) y bloquea URLs `javascript:`/`data:`.
+- **Archivos en la imagen**: `outputFileTracingIncludes` copia `docs/manual` al standalone; se leen del disco en cada
+  visita (cambiar el manual = deploy, sin tocar código).
+- **Capturas públicas** (`/ayuda/img/[nombre]`): son de la base de demostración con datos ficticios, y la guía del
+  estudiante (sin sesión) las necesita. El nombre se valida con una lista blanca (`[a-z0-9-].png|jpg|webp`). El PDF del
+  manual de la Dra. pide sesión; las guías no. `/ayuda` está en `robots.txt` como `disallow` y con `noindex`.
+- **Base de demostración `cobra_app_demo`** se recrea en cada corrida con los mismos roles locales y los servicios reales
+  (planes, propuestas, pagos, mora, formularios), sin correo (Resend/SMTP vacíos). QR y comprobantes de ejemplo se
+  generan con la marca «DEMO». Fechas relativas a hoy, así los estados (al día, en gracia, en cola…) siempre se ven.
+- **Anotaciones** como capa HTML sobre la página (recuadro + número + flecha opcional) y luego `sharp` en paleta para
+  achicar los PNG. En el celular solo número y recuadro (las flechas tapaban contenido).
+- **PDF con el Chromium de Playwright** en dos pasadas: la 1.ª ubica cada título con un marcador invisible (pdf.js), la
+  2.ª escribe los números de página del índice. Guías del estudiante a dos columnas para quedar en 6 páginas.
+- **Botón «?»** como prop `ayuda` de `EncabezadoPagina` (un solo lugar); los ids de sección son explícitos
+  (`{#id}` en el Markdown) y una prueba verifica que todos existan.
+- **`npm run usuario:clave`** (nuevo script de producción): contraseña aleatoria mostrada una vez, cierra sesiones y quita
+  el bloqueo. Era la única forma de recuperar el acceso si el correo no está configurado.

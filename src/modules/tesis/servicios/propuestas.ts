@@ -6,7 +6,7 @@ import { esquemaCuota, esquemaReglasMora, type CuotaEditable } from "@/modules/c
 import { clientes, cuotas, enlacesPortal, MONEDAS } from "@/modules/cobros/schema";
 import { crearCliente } from "@/modules/cobros/servicios/clientes";
 import { anularEnlacesDePlan, crearEnlace, urlPortal } from "@/modules/cobros/servicios/enlaces";
-import { cambiarMonedaYTitulo, crearPlan, guardarCuotas, guardarReglas, marcarAceptado, obtenerPlanCompleto, type Actor } from "@/modules/cobros/servicios/planes";
+import { cambiarMonedaYTitulo, crearPlan, eliminarPlan, guardarCuotas, guardarReglas, marcarAceptado, obtenerPlanCompleto, type Actor } from "@/modules/cobros/servicios/planes";
 import { esquemaCronograma, type DatosCronograma } from "@/modules/tesis/dominio/cronograma";
 import { calcularExpiracion, debeVencer, ESTADOS_EDITABLES, siguienteEstado } from "@/modules/tesis/dominio/estados";
 import {
@@ -20,6 +20,7 @@ import {
   revisiones,
   type EstadoProyecto,
 } from "@/modules/tesis/schema";
+import { quitarFilasArchivos } from "@/core/archivos";
 import { archivos } from "@/core/db/schema";
 
 export const REFERENCIA_PROPUESTA = "propuesta";
@@ -361,3 +362,27 @@ export async function obtenerProyecto(tx: Ejecutor, id: string) {
   return { propuesta: fila.propuesta, cliente: fila.cliente, plan: plan!, cronogramas: conActs, vigente, nuevoPendiente, revisiones: revs, extras, historial, archivos: files, respuestas, enlace: enlace ?? null };
 }
 export type Proyecto = NonNullable<Awaited<ReturnType<typeof obtenerProyecto>>>;
+
+/**
+ * Elimina una propuesta/proyecto con todo lo suyo: cronogramas, revisiones, extras, respuestas, historial, archivos
+ * del proyecto y su plan de pagos en Cobros (cuotas, pagos, enlaces). Devuelve las rutas a borrar del disco.
+ */
+export async function eliminarPropuesta(tx: Ejecutor, id: string): Promise<string[]> {
+  const [p] = await tx.select().from(propuestas).where(eq(propuestas.id, id));
+  if (!p) throw new Error("Propuesta no encontrada");
+  const delProyecto = await tx.select({ id: archivosProyecto.archivoId }).from(archivosProyecto).where(eq(archivosProyecto.propuestaId, id));
+  await tx.delete(propuestas).where(eq(propuestas.id, id));
+  const rutas = await quitarFilasArchivos(tx, delProyecto.map((a) => a.id));
+  return [...rutas, ...(await eliminarPlan(tx, p.planId))];
+}
+
+/** Propuestas de un estudiante (para eliminar al cliente desde la capa de rutas). */
+export async function propuestasDeCliente(tx: Ejecutor, clienteId: string) {
+  return tx.select({ id: propuestas.id }).from(propuestas).where(eq(propuestas.clienteId, clienteId));
+}
+
+/** ¿Este plan es el de una propuesta? (Cobros no conoce a Tesis: lo pregunta la capa de rutas.) */
+export async function propuestaDePlan(tx: Ejecutor, planId: string) {
+  const [p] = await tx.select({ id: propuestas.id }).from(propuestas).where(eq(propuestas.planId, planId));
+  return p ?? null;
+}

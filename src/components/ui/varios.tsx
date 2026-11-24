@@ -1,4 +1,5 @@
-import type { LucideIcon } from "lucide-react";
+import { CircleHelp, type LucideIcon } from "lucide-react";
+import Link from "next/link";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
@@ -145,13 +146,31 @@ export function TarjetaKpi({
   );
 }
 
-export function EncabezadoPagina({ titulo, descripcion, acciones, migas, children }: { titulo: React.ReactNode; descripcion?: React.ReactNode; acciones?: React.ReactNode; migas?: React.ReactNode; children?: React.ReactNode }) {
+/** Botón "?" que lleva a la sección del manual de uso (/panel/ayuda#seccion) de la pantalla actual. */
+export function BotonAyuda({ seccion, className }: { seccion: string; className?: string }) {
+  return (
+    <Link
+      href={`/panel/ayuda#${seccion}`}
+      title="Ayuda sobre esta pantalla"
+      aria-label="Ayuda sobre esta pantalla"
+      data-testid="boton-ayuda"
+      className={cn("inline-flex size-7 shrink-0 items-center justify-center rounded-full text-subtle-foreground transition-colors hover:bg-primary-soft hover:text-primary", className)}
+    >
+      <CircleHelp className="size-[18px]" aria-hidden />
+    </Link>
+  );
+}
+
+export function EncabezadoPagina({ titulo, descripcion, acciones, migas, ayuda, children }: { titulo: React.ReactNode; descripcion?: React.ReactNode; acciones?: React.ReactNode; migas?: React.ReactNode; ayuda?: string; children?: React.ReactNode }) {
   return (
     <div className="mb-6 space-y-3">
       {migas}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0 space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-balance">{titulo}</h1>
+          <h1 className="flex items-center gap-1.5 text-2xl font-semibold tracking-tight text-balance">
+            {titulo}
+            {ayuda && <BotonAyuda seccion={ayuda} />}
+          </h1>
           {descripcion && <div className="text-sm text-muted-foreground">{descripcion}</div>}
         </div>
         {acciones && <div className="flex shrink-0 flex-wrap items-center gap-2">{acciones}</div>}

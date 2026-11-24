@@ -27,7 +27,7 @@ export default async function EditarPropuestaPage(props: { params: Promise<{ id:
   if (d.p.propuesta.aceptadaEn || !ESTADOS_EDITABLES.includes(d.p.propuesta.estado)) redirect(`/panel/tesis/propuestas/${id}`);
   return (
     <div className="space-y-4">
-      <EncabezadoPagina
+      <EncabezadoPagina ayuda="editar-reenviar"
         migas={<Migas items={[{ etiqueta: "Propuestas y proyectos", href: "/panel/tesis/propuestas" }, { etiqueta: d.p.propuesta.titulo, href: `/panel/tesis/propuestas/${id}` }, { etiqueta: "Editar" }]} />}
         titulo="Editar propuesta"
         descripcion="Los cambios del plan de pagos quedan en su historial."

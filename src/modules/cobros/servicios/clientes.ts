@@ -1,6 +1,7 @@
 import { and, asc, eq, ilike, or } from "drizzle-orm";
 import type { Ejecutor } from "@/lib/db";
-import { clientes } from "@/modules/cobros/schema";
+import { clientes, planesPago } from "@/modules/cobros/schema";
+import { eliminarPlan } from "./planes";
 
 export { esquemaCliente, type DatosCliente } from "./clientes-esquema";
 import { esquemaCliente, type DatosCliente } from "./clientes-esquema";
@@ -38,4 +39,13 @@ export async function actualizarCliente(tx: Ejecutor, id: string, datos: DatosCl
     .returning();
   if (!c) throw new Error("Cliente no encontrado");
   return c;
+}
+
+/** Elimina un cliente y todos sus planes (con pagos y archivos). Devuelve las rutas a borrar del disco. */
+export async function eliminarCliente(tx: Ejecutor, id: string): Promise<string[]> {
+  const rutas: string[] = [];
+  for (const p of await tx.select({ id: planesPago.id }).from(planesPago).where(eq(planesPago.clienteId, id))) rutas.push(...(await eliminarPlan(tx, p.id)));
+  const borrado = await tx.delete(clientes).where(eq(clientes.id, id)).returning({ id: clientes.id });
+  if (!borrado.length) throw new Error("Cliente no encontrado");
+  return rutas;
 }

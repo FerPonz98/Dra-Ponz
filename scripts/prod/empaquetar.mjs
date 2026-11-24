@@ -3,7 +3,7 @@
 import { build } from "esbuild";
 
 await build({
-  entryPoints: { migrar: "scripts/prod/migrar.ts", worker: "scripts/prod/worker.ts", "seed-prod": "scripts/prod/seed-prod.ts", restaurar: "scripts/prod/restaurar.ts", salud: "scripts/prod/salud.ts" },
+  entryPoints: { migrar: "scripts/prod/migrar.ts", worker: "scripts/prod/worker.ts", "seed-prod": "scripts/prod/seed-prod.ts", restaurar: "scripts/prod/restaurar.ts", salud: "scripts/prod/salud.ts", "restablecer-clave": "scripts/prod/restablecer-clave.ts" },
   outdir: "dist-prod",
   outExtension: { ".js": ".mjs" },
   bundle: true,

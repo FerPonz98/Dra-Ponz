@@ -1,4 +1,4 @@
-import { LinkIcon, Lock } from "lucide-react";
+import { CircleHelp, LinkIcon, Lock } from "lucide-react";
 import type { Metadata } from "next";
 import { MarcaOrganizacion } from "@/components/marca/marca";
 import { clasesFuentes } from "@/components/tema/fuentes";
@@ -30,8 +30,25 @@ function Encabezado({ org }: { org: OrgMarca }) {
             <Lock className="size-3" aria-hidden /> Portal privado
           </p>
         </div>
+        <BotonGuia />
       </div>
     </header>
+  );
+}
+
+/** "¿Necesitas ayuda?": abre la guía del estudiante (ES/PT) en otra pestaña, sin perder el portal. */
+function BotonGuia({ ancla }: { ancla?: string }) {
+  return (
+    <a
+      href={`/ayuda/estudiante${ancla ? `#${ancla}` : ""}`}
+      target="_blank"
+      rel="noopener"
+      data-testid="boton-guia"
+      className={`${ancla ? "" : "ml-auto "}inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground shadow-xs hover:bg-muted`}
+    >
+      <CircleHelp className="size-4 text-primary" aria-hidden />
+      ¿Necesitas ayuda?
+    </a>
   );
 }
 
@@ -48,6 +65,9 @@ export default async function PortalPage(props: { params: Promise<{ token: strin
           </span>
           <h1 className="text-xl font-semibold tracking-tight">Enlace no disponible</h1>
           <p className="mt-2 text-muted-foreground">Este enlace venció o fue reemplazado. Pide uno nuevo a quien te lo envió y con gusto te lo reenvía.</p>
+          <div className="mt-6 flex justify-center">
+            <BotonGuia ancla="si-algo-falla" />
+          </div>
         </div>
       </main>
     );

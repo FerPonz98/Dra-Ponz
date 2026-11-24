@@ -2,6 +2,7 @@ import { GraduationCap, Plus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requerirModulo } from "@/core/contexto";
+import { Aviso } from "@/components/ui/aviso";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { TablaDatos } from "@/components/ui/tabla-datos";
@@ -14,7 +15,8 @@ import { listarPropuestas } from "@/modules/tesis/servicios/propuestas";
 
 export const metadata: Metadata = { title: "Propuestas y proyectos" };
 
-export default async function PropuestasPage() {
+export default async function PropuestasPage(props: { searchParams: Promise<{ eliminado?: string }> }) {
+  const { eliminado } = await props.searchParams;
   const ctx = await requerirModulo("tesis", "tesis:ver");
   const lista = await withOrg(ctx.organizacion.id, (tx) => listarPropuestas(tx));
   const boton = ctx.puede("tesis:editar") && (
@@ -26,7 +28,8 @@ export default async function PropuestasPage() {
   );
   return (
     <div>
-      <EncabezadoPagina titulo="Propuestas y proyectos" descripcion="Desde la propuesta enviada hasta la defensa: estado, estudiante y avance de cada tesis." acciones={boton} />
+      <EncabezadoPagina ayuda="propuestas" titulo="Propuestas y proyectos" descripcion="Desde la propuesta enviada hasta la defensa: estado, estudiante y avance de cada tesis." acciones={boton} />
+      {eliminado && <Aviso tipo="exito" className="mb-4">Propuesta eliminada, con su plan de pagos y sus archivos.</Aviso>}
       <TablaDatos
         etiqueta="Propuestas y proyectos"
         buscar="Buscar por tema, estudiante o universidad"

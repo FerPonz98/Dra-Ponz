@@ -14,7 +14,7 @@ export default async function PlantillasPage() {
   const lista = await withOrg(ctx.organizacion.id, (tx) => plantillasDeOrganizacion(tx));
   return (
     <div className="mx-auto max-w-4xl">
-      <EncabezadoPagina
+      <EncabezadoPagina ayuda="plantillas"
         titulo="Plantillas de mensaje"
         descripcion={
           <span className="flex flex-wrap items-center gap-1.5">

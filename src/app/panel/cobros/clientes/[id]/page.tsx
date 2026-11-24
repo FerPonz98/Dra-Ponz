@@ -11,6 +11,8 @@ import { BadgeMora } from "@/modules/cobros/componentes/estado";
 import { obtenerCliente } from "@/modules/cobros/servicios/clientes";
 import { listarPlanes } from "@/modules/cobros/servicios/planes";
 import { FormCliente } from "../form-cliente";
+import { BotonEliminar } from "@/components/panel/boton-eliminar";
+import { accionEliminarCliente } from "@/app/panel/eliminar-acciones";
 
 export default async function ClientePage(props: { params: Promise<{ id: string }> }) {
   const ctx = await requerirModulo("cobros", "cobros:ver");
@@ -22,7 +24,7 @@ export default async function ClientePage(props: { params: Promise<{ id: string 
   const editar = ctx.puede("cobros:editar");
   return (
     <div>
-      <EncabezadoPagina
+      <EncabezadoPagina ayuda="clientes"
         migas={<Migas items={[{ etiqueta: "Clientes", href: "/panel/cobros/clientes" }, { etiqueta: c.nombre }]} />}
         titulo={
           <span className="flex items-center gap-3">
@@ -48,11 +50,19 @@ export default async function ClientePage(props: { params: Promise<{ id: string 
         }
         acciones={
           editar && (
-            <Button asChild>
-              <Link href={`/panel/cobros/planes/nuevo?cliente=${c.id}`}>
-                <Plus /> Nuevo plan de pagos
-              </Link>
-            </Button>
+            <>
+              <BotonEliminar
+                etiqueta="Eliminar cliente"
+                titulo={`¿Eliminar a ${c.nombre}?`}
+                descripcion={`Se borran también sus ${datos.planes.length} ${datos.planes.length === 1 ? "plan" : "planes"} de pago, sus propuestas de tesis, cuotas, pagos, comprobantes y archivos. No se puede deshacer.`}
+                accion={accionEliminarCliente.bind(null, c.id)}
+              />
+              <Button asChild>
+                <Link href={`/panel/cobros/planes/nuevo?cliente=${c.id}`}>
+                  <Plus /> Nuevo plan de pagos
+                </Link>
+              </Button>
+            </>
           )
         }
       />

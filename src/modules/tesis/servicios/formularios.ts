@@ -156,3 +156,10 @@ export async function subirArchivosEstudiante(tx: Ejecutor, d: { organizacionId:
   }
   return guardados;
 }
+
+/** Elimina un formulario. Las propuestas que lo usaban quedan «sin formulario» y sus respuestas se borran (los
+ *  archivos que el estudiante subió con él siguen en el proyecto). */
+export async function eliminarFormulario(tx: Ejecutor, id: string) {
+  const borrado = await tx.delete(formularios).where(eq(formularios.id, id)).returning({ id: formularios.id });
+  if (!borrado.length) throw new Error("Formulario no encontrado");
+}

@@ -1,0 +1,1 @@
+ALTER TABLE "organizaciones" ADD COLUMN "foto_landing_archivo_id" uuid;

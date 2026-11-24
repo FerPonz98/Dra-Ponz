@@ -204,7 +204,7 @@ export function Landing({ c, t, idioma, whatsapp, fotoUrl, tema, org, nonce }: {
                 <div aria-hidden className="flotar absolute inset-0 rounded-t-full rounded-b-[2rem] border-2 border-tema-acento/60" />
                 <div className="relative aspect-[4/5] overflow-hidden rounded-t-full rounded-b-[2rem] bg-gradient-to-b from-tema-primario-suave to-tema-primario-borde shadow-xl shadow-tema-secundario/15">
                   {fotoUrl ? (
-                    <Image src={fotoUrl} alt={t.fotoAlt} fill priority sizes="(min-width: 768px) 340px, 80vw" className="object-cover" />
+                    <Image src={fotoUrl} alt={t.fotoAlt} fill priority sizes="(min-width: 768px) 340px, 80vw" className="object-cover" unoptimized={fotoUrl.startsWith("/marca/")} />
                   ) : (
                     <svg role="img" aria-label={t.fotoAlt} viewBox="0 0 240 300" className="absolute inset-0 size-full text-tema-primario">
                       <circle cx="120" cy="128" r="50" fill="currentColor" opacity="0.22" />

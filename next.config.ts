@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
     },
   },
   serverExternalPackages: ["@react-pdf/renderer", "pg"],
+  // Manuales de uso (docs/manual): la ayuda del panel y la guía del estudiante los leen del disco.
+  outputFileTracingIncludes: {
+    "/panel/ayuda": ["./docs/manual/*.md"],
+    "/ayuda/**": ["./docs/manual/*.md", "./docs/manual/*.pdf", "./docs/manual/img/*"],
+  },
   experimental: {
     // 50 MB por archivo + margen del multipart (el servidor valida el límite exacto de 50 MB).
     serverActions: { bodySizeLimit: "52mb" },

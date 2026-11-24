@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requerirModulo } from "@/core/contexto";
 import { Badge } from "@/components/ui/badge";
+import { Aviso } from "@/components/ui/aviso";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { TablaDatos } from "@/components/ui/tabla-datos";
@@ -14,7 +15,8 @@ import { listarPlanes } from "@/modules/cobros/servicios/planes";
 
 export const metadata: Metadata = { title: "Planes de pago" };
 
-export default async function PlanesPage() {
+export default async function PlanesPage(props: { searchParams: Promise<{ eliminado?: string }> }) {
+  const { eliminado } = await props.searchParams;
   const ctx = await requerirModulo("cobros", "cobros:ver");
   const planes = await withOrg(ctx.organizacion.id, (tx) => listarPlanes(tx));
   const editar = ctx.puede("cobros:editar");
@@ -27,7 +29,8 @@ export default async function PlanesPage() {
   );
   return (
     <div>
-      <EncabezadoPagina titulo="Planes de pago" descripcion="Cuotas, avance de pago y estado de mora de cada plan." acciones={boton} />
+      <EncabezadoPagina ayuda="cobros" titulo="Planes de pago" descripcion="Cuotas, avance de pago y estado de mora de cada plan." acciones={boton} />
+      {eliminado && <Aviso tipo="exito" className="mb-4">Plan de pagos eliminado.</Aviso>}
       <TablaDatos
         etiqueta="Planes de pago"
         buscar="Buscar por concepto o cliente"

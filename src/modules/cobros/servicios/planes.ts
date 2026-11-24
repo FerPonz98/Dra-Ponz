@@ -1,5 +1,7 @@
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
+import { quitarFilasArchivos } from "@/core/archivos";
+import { archivos } from "@/core/db/schema";
 import type { Ejecutor } from "@/lib/db";
 import { calcularCambiosCuotas, calcularTotal, cambiosReglas, esquemaCuota, esquemaReglasMora, REGLAS_VACIAS, type CambioHistorial, type CuotaEditable, type ReglasMora } from "@/modules/cobros/dominio/plan";
 import { evaluarMora, recargosNuevos } from "@/modules/cobros/dominio/mora";
@@ -238,4 +240,18 @@ export async function recalcularMoraLote(tx: Ejecutor, planIds: string[], hoy: s
 
 export async function idsPlanesActivos(tx: Ejecutor) {
   return (await tx.select({ id: planesPago.id }).from(planesPago).where(eq(planesPago.estado, "activo"))).map((x) => x.id);
+}
+
+/**
+ * Elimina un plan con TODO lo suyo: cuotas, recargos, pagos, enlaces del portal e historial (en cascada) y los
+ * archivos subidos por su portal (comprobantes y documentos). Devuelve las rutas a borrar del disco tras el commit.
+ * Si el plan pertenece a otro registro (p. ej. una propuesta de tesis), la base lo impide: se elimina desde allí.
+ */
+export async function eliminarPlan(tx: Ejecutor, planId: string): Promise<string[]> {
+  const enlaces = await tx.select({ id: enlacesPortal.id }).from(enlacesPortal).where(eq(enlacesPortal.planId, planId));
+  const deEnlaces = enlaces.length ? await tx.select({ id: archivos.id }).from(archivos).where(inArray(archivos.enlaceId, enlaces.map((e) => e.id))) : [];
+  const comprobantes = await tx.select({ id: pagos.comprobanteArchivoId }).from(pagos).where(eq(pagos.planId, planId));
+  const borrado = await tx.delete(planesPago).where(eq(planesPago.id, planId)).returning({ id: planesPago.id });
+  if (!borrado.length) throw new Error("Plan no encontrado");
+  return quitarFilasArchivos(tx, [...deEnlaces.map((a) => a.id), ...comprobantes.map((c) => c.id)]);
 }
