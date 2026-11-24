@@ -47,3 +47,6 @@ next-env.d.ts
 /playwright-report/
 /lighthouse/
 /.data-server.log
+
+# Herramientas portables de auditoría/carga (scripts/auditoria/instalar-herramientas.ps1)
+/.herramientas/

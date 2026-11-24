@@ -205,3 +205,39 @@ Cuando el prompt no fue explícito se eligió la opción más simple y segura. A
 - **Accesibilidad**: nueva auditoría `npm run accesibilidad` (axe WCAG 2.1 AA) en claro, oscuro, landing y portal.
 - Los E2E se adaptaron a los cambios de interfaz (panel lateral de cliente, "Ya pagué, subir comprobante", diálogos,
   pestañas); los flujos probados son los mismos.
+
+## Temas por organización y landing con movimiento
+
+- **Tema en `core`** (`src/core/tema`), no en un módulo: lo usan la landing (tesis), el portal (cobros y tesis) y el panel.
+  Tabla `organizacion_tema` con `organizacion_id` como clave primaria (una fila por organización) y RLS.
+- **Sin fila = sin cambios** en panel y portal (diseño de la plataforma); la landing usa el tema por defecto. El seed crea
+  la fila de la Dra. con sus colores actuales. Al guardar se sincronizan `organizaciones.color_primario/secundario`.
+- **Los colores se eligen solo en Apariencia**: se quitaron los dos selectores de color del formulario de Organización
+  (quedó un enlace) para no tener dos fuentes de verdad.
+- **El usuario elige 5 colores; las variantes se calculan** y las de texto se corrigen solas hasta 4.5:1. Las reglas que
+  dependen de su elección (texto/fondo, botón, títulos, franjas) bloquean el guardado en el cliente y en el servidor (Zod).
+- **Botones de la landing con el primario del tema** (antes verde WhatsApp fijo), con el ícono de WhatsApp: así el tema
+  cambia de verdad el botón principal, como pide la prueba E2E.
+- **Variables en el `<head>` con `<style precedence>` de React 19** desde el servidor; cache por organización con
+  `unstable_cache` + `updateTag` al guardar (Next 16 recomienda `use cache`, pero exige activar Cache Components en todo
+  el proyecto).
+- **Tailwind 4 no tiene `tailwind.config`**: el equivalente a `theme.extend.colors` es `@theme inline` en `globals.css`
+  (`--color-tema-*: var(--color-*)`).
+- **Motion se adopta ahora** (antes se había descartado) porque se pidió explícitamente; se usa solo donde aporta
+  (scroll, inclinación, línea de proceso) con `LazyMotion` diferido. Lo demás es CSS para no retrasar el LCP.
+- **Manchas con `radial-gradient`** en vez de `filter: blur`: con blur Lighthouse móvil bajó a 75 (≈0,5 s de render).
+- **Botón flotante de WhatsApp tras la portada** en todos los tamaños (antes fijo desde el inicio solo en el celular);
+  se ajustó el E2E de la fase 5.
+
+## Auditoría de seguridad y carga
+
+- **FK compuestas con `organizacion_id`** (además de RLS): las claves foráneas de Postgres no pasan por RLS. Regla nueva:
+  `SELECT aplicar_fk_misma_organizacion();` en la migración de cada tabla con FK a otra tabla de negocio.
+- **Límites de login en la BD** (`limites_auth`) + **bloqueo por cuenta** (`intentos_login`): permite PM2 en cluster.
+- **CSP con nonce por petición** en `src/proxy.ts`. La landing se cachea 10 s en Nginx reemplazando el nonce marcador por
+  `$request_id` (`sub_filter`): CSP estricta y la landing aguanta picos. Costo aceptado: los cambios de la landing tardan ≤ 10 s.
+- **Sin `unstable_cache` para el tema ni los textos**: con varios procesos solo se invalidaba en uno. Se leen frescos en una
+  transacción por visita (es poco y es rápido).
+- **Descargas siempre `attachment`**, con `CSP: sandbox`.
+- **Cuotas en orden** en el portal y un solo pago pendiente por cuota (índice parcial).
+- **Herramientas de auditoría portables y nativas de Windows** (`.herramientas/`, sin WSL ni Docker).

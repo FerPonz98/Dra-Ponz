@@ -176,34 +176,64 @@ export type PlanCompleto = NonNullable<Awaited<ReturnType<typeof obtenerPlanComp
 
 /** Recalcula estado de mora y recargos de un plan para `hoy`. Idempotente (no duplica recargos). */
 export async function recalcularMora(tx: Ejecutor, planId: string, hoy: string, zona?: string) {
-  const [p] = await tx.select().from(planesPago).where(eq(planesPago.id, planId));
-  if (!p || p.estado !== "activo") return null;
-  // Un plan aún no aceptado por el cliente (p. ej. una propuesta enviada) no entra en mora.
-  if (!p.aceptadoEn) return null;
-  const lista = await tx.select().from(cuotas).where(eq(cuotas.planId, planId));
-  const pendientes = await tx.select({ cuotaId: pagos.cuotaId }).from(pagos).where(and(eq(pagos.planId, planId), eq(pagos.estado, "pendiente")));
-  const enRevision = new Set(pendientes.map((x) => x.cuotaId));
-  const r = evaluarMora(
-    { reglas: reglasDePlan(p), aceptadoEn: p.aceptadoEn, numeroMoras: p.numeroMoras, estadoMora: p.estadoMora, zona },
-    lista.map((c) => ({ ...c, pagoEnRevision: enRevision.has(c.id) })),
-    hoy,
-  );
-  const ids = lista.map((c) => c.id);
-  const existentes = ids.length ? await tx.select({ cuotaId: recargos.cuotaId, numero: recargos.numero }).from(recargos).where(inArray(recargos.cuotaId, ids)) : [];
-  const nuevos = recargosNuevos(r.recargos, existentes);
-  if (nuevos.length) {
-    await tx
-      .insert(recargos)
-      .values(nuevos.map((n) => ({ organizacionId: p.organizacionId, cuotaId: n.cuotaId, numero: n.numero, porcentaje: n.porcentaje.toFixed(2), montoCentavos: n.montoCentavos, aplicadoEn: n.aplicadoEn })))
-      .onConflictDoNothing();
+  return (await recalcularMoraLote(tx, [planId], hoy, zona)).get(planId) ?? null;
+}
+
+export type ResultadoMoraPlan = ReturnType<typeof evaluarMora> & { recargosAgregados: number; estadoAnterior: Plan["estadoMora"] };
+
+const LOTE = 2000;
+async function porLotes<T, R>(xs: T[], fn: (lote: T[]) => Promise<R[]>): Promise<R[]> {
+  const out: R[] = [];
+  for (let i = 0; i < xs.length; i += LOTE) out.push(...(await fn(xs.slice(i, i + LOTE))));
+  return out;
+}
+
+/**
+ * Recalcula mora y recargos de muchos planes con pocas consultas (por lotes, sin N+1): lee planes, cuotas,
+ * pagos en revisión y recargos existentes de una vez, evalúa en memoria (mismas reglas: evaluarMora) y escribe
+ * por lotes. Idempotente: los recargos van con ON CONFLICT DO NOTHING sobre (cuota, número).
+ */
+export async function recalcularMoraLote(tx: Ejecutor, planIds: string[], hoy: string, zona?: string): Promise<Map<string, ResultadoMoraPlan>> {
+  const resultado = new Map<string, ResultadoMoraPlan>();
+  if (!planIds.length) return resultado;
+  const planes = (await porLotes(planIds, (l) => tx.select().from(planesPago).where(inArray(planesPago.id, l)))).filter((p) => p.estado === "activo" && p.aceptadoEn);
+  if (!planes.length) return resultado;
+  const ids = planes.map((p) => p.id);
+  const todas = await porLotes(ids, (l) => tx.select().from(cuotas).where(inArray(cuotas.planId, l)));
+  const enRevision = new Set((await porLotes(ids, (l) => tx.select({ cuotaId: pagos.cuotaId }).from(pagos).where(and(inArray(pagos.planId, l), eq(pagos.estado, "pendiente"))))).map((x) => x.cuotaId));
+  const existentes = await porLotes(ids, (l) => tx.select({ cuotaId: recargos.cuotaId, numero: recargos.numero, planId: cuotas.planId }).from(recargos).innerJoin(cuotas, eq(cuotas.id, recargos.cuotaId)).where(inArray(cuotas.planId, l)));
+  const cuotasDe = new Map<string, (typeof todas)[number][]>();
+  for (const c of todas) cuotasDe.set(c.planId, [...(cuotasDe.get(c.planId) ?? []), c]);
+  const recargosDe = new Map<string, { cuotaId: string; numero: number }[]>();
+  for (const r of existentes) recargosDe.set(r.planId, [...(recargosDe.get(r.planId) ?? []), r]);
+
+  const insertar: (typeof recargos.$inferInsert)[] = [];
+  const cambios: { id: string; estado: Plan["estadoMora"]; n: number; antes: Plan["estadoMora"]; org: string }[] = [];
+  const finalizados: string[] = [];
+  for (const p of planes) {
+    const lista = cuotasDe.get(p.id) ?? [];
+    const r = evaluarMora(
+      { reglas: reglasDePlan(p), aceptadoEn: p.aceptadoEn!, numeroMoras: p.numeroMoras, estadoMora: p.estadoMora, zona },
+      lista.map((c) => ({ ...c, pagoEnRevision: enRevision.has(c.id) })),
+      hoy,
+    );
+    const nuevos = recargosNuevos(r.recargos, recargosDe.get(p.id) ?? []);
+    for (const n of nuevos) insertar.push({ organizacionId: p.organizacionId, cuotaId: n.cuotaId, numero: n.numero, porcentaje: n.porcentaje.toFixed(2), montoCentavos: n.montoCentavos, aplicadoEn: n.aplicadoEn });
+    if (r.estadoMora !== p.estadoMora || r.numeroMoras !== p.numeroMoras) cambios.push({ id: p.id, estado: r.estadoMora, n: r.numeroMoras, antes: p.estadoMora, org: p.organizacionId });
+    if (lista.length > 0 && lista.every((c) => c.estado === "pagada")) finalizados.push(p.id);
+    resultado.set(p.id, { ...r, recargosAgregados: nuevos.length, estadoAnterior: p.estadoMora });
   }
-  if (r.estadoMora !== p.estadoMora || r.numeroMoras !== p.numeroMoras) {
-    await tx.update(planesPago).set({ estadoMora: r.estadoMora, numeroMoras: r.numeroMoras }).where(eq(planesPago.id, planId));
-    await tx.insert(historialPlan).values({ organizacionId: p.organizacionId, planId, campo: "estado de mora", valorAntes: p.estadoMora, valorDespues: r.estadoMora, usuarioNombre: "sistema" });
+
+  for (let i = 0; i < insertar.length; i += 1000) await tx.insert(recargos).values(insertar.slice(i, i + 1000)).onConflictDoNothing();
+  for (let i = 0; i < cambios.length; i += 1000) {
+    const l = cambios.slice(i, i + 1000);
+    await tx.execute(sql`update planes_pago p set estado_mora = v.estado, numero_moras = v.n
+      from (values ${sql.join(l.map((c) => sql`(${c.id}::uuid, ${c.estado}::text, ${c.n}::int)`), sql`, `)}) as v(id, estado, n)
+      where p.id = v.id`);
+    await tx.insert(historialPlan).values(l.map((c) => ({ organizacionId: c.org, planId: c.id, campo: "estado de mora", valorAntes: c.antes, valorDespues: c.estado, usuarioNombre: "sistema" })));
   }
-  const todasPagadas = lista.length > 0 && lista.every((c) => c.estado === "pagada");
-  if (todasPagadas) await tx.update(planesPago).set({ estado: "finalizado" }).where(eq(planesPago.id, planId));
-  return { ...r, recargosAgregados: nuevos.length, estadoAnterior: p.estadoMora };
+  for (let i = 0; i < finalizados.length; i += LOTE) await tx.update(planesPago).set({ estado: "finalizado" }).where(inArray(planesPago.id, finalizados.slice(i, i + LOTE)));
+  return resultado;
 }
 
 export async function idsPlanesActivos(tx: Ejecutor) {

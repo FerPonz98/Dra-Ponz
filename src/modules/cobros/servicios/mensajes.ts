@@ -32,6 +32,12 @@ export async function guardarPlantilla(tx: Ejecutor, organizacionId: string, cla
     .onConflictDoUpdate({ target: [plantillasMensaje.organizacionId, plantillasMensaje.clave], set: { cuerpo: c, actualizadoEn: new Date() } });
 }
 
+/** Todas las plantillas de la organización de una vez (para listas: evita una consulta por fila). */
+export async function cargarPlantillas(tx: Ejecutor) {
+  const guardadas = new Map((await tx.select().from(plantillasMensaje)).map((g) => [g.clave, g.cuerpo]));
+  return (clave: ClavePlantilla, v: Variables) => rellenarPlantilla(guardadas.get(clave) ?? PLANTILLAS_BASE.find((p) => p.clave === clave)!.cuerpo, v);
+}
+
 export async function mensaje(tx: Ejecutor, clave: ClavePlantilla, v: Variables) {
   const [g] = await tx.select().from(plantillasMensaje).where(eq(plantillasMensaje.clave, clave));
   const cuerpo = g?.cuerpo ?? PLANTILLAS_BASE.find((p) => p.clave === clave)!.cuerpo;

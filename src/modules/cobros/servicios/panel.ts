@@ -5,7 +5,7 @@ import { sumarDias, sumarMeses } from "@/lib/fechas";
 import { clientes, cuotas, enlacesPortal, pagos, planesPago, recargos, type Moneda } from "@/modules/cobros/schema";
 import type { ClavePlantilla } from "@/modules/cobros/dominio/mensajes";
 import { urlPortal } from "./enlaces";
-import { mensaje, vars } from "./mensajes";
+import { cargarPlantillas, vars } from "./mensajes";
 
 export type CategoriaRecordatorio = "vence_en_3_dias" | "vence_hoy" | "vencida" | "en_cola";
 
@@ -31,6 +31,11 @@ export async function recordatoriosDeHoy(tx: Ejecutor, hoy: string) {
   const recs = cuotaIds.length ? await tx.select({ cuotaId: recargos.cuotaId, monto: recargos.montoCentavos }).from(recargos).where(inArray(recargos.cuotaId, cuotaIds)) : [];
   const enRevision = cuotaIds.length ? await tx.select({ cuotaId: pagos.cuotaId }).from(pagos).where(and(inArray(pagos.cuotaId, cuotaIds), eq(pagos.estado, "pendiente"))) : [];
   const revision = new Set(enRevision.map((x) => x.cuotaId));
+  // Mapas en vez de búsquedas lineales, y las plantillas en una sola consulta (antes: una consulta por fila).
+  const recargoDe = new Map<string, number>();
+  for (const r of recs) recargoDe.set(r.cuotaId, (recargoDe.get(r.cuotaId) ?? 0) + r.monto);
+  const enlaceDe = new Map(enlaces.map((e) => [e.planId, e]));
+  const redactar = await cargarPlantillas(tx);
 
   const salida: { categoria: CategoriaRecordatorio; cuotaId: string; numero: number; fecha: string; montoCentavos: number; moneda: Moneda; plan: { id: string; titulo: string }; cliente: { id: string; nombre: string; whatsapp: string | null }; mensaje: string }[] = [];
   for (const f of filas) {
@@ -39,9 +44,9 @@ export async function recordatoriosDeHoy(tx: Ejecutor, hoy: string) {
     if (f.cuota.fechaVencimiento > hoy) categoria = "vence_en_3_dias";
     else if (f.cuota.fechaVencimiento === hoy) categoria = "vence_hoy";
     else categoria = f.plan.estadoMora === "en_cola" ? "en_cola" : "vencida";
-    const monto = f.cuota.montoCentavos + recs.filter((r) => r.cuotaId === f.cuota.id).reduce((s, r) => s + r.monto, 0);
-    const e = enlaces.find((x) => x.planId === f.plan.id);
-    const texto = await mensaje(tx, PLANTILLA[categoria], vars({ nombre: f.cliente.nombre, montoCentavos: monto, moneda: f.plan.moneda, fecha: f.cuota.fechaVencimiento, enlace: e?.token ? urlPortal(e.token) : null, proyecto: f.plan.titulo }));
+    const monto = f.cuota.montoCentavos + (recargoDe.get(f.cuota.id) ?? 0);
+    const e = enlaceDe.get(f.plan.id);
+    const texto = redactar(PLANTILLA[categoria], vars({ nombre: f.cliente.nombre, montoCentavos: monto, moneda: f.plan.moneda, fecha: f.cuota.fechaVencimiento, enlace: e?.token ? urlPortal(e.token) : null, proyecto: f.plan.titulo }));
     salida.push({
       categoria,
       cuotaId: f.cuota.id,

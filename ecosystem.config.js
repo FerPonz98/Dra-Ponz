@@ -22,10 +22,14 @@ module.exports = {
       name: "cobros",
       cwd: __dirname,
       script: ".next/standalone/server.js",
-      // Una sola instancia: el rate limit del login vive en memoria.
-      instances: 1,
-      exec_mode: "fork",
-      max_memory_restart: "700M",
+      // Cluster: un proceso por vCPU (PM2_INSTANCIAS, por defecto 2). Es seguro: los límites del login y los
+      // bloqueos viven en la BD, y el tema/textos de la landing se leen frescos en cada visita (sin caché por proceso).
+      // Cada proceso abre hasta 2 × DB_POOL_MAX conexiones (app + dueño): procesos × 2 × 10 < max_connections (100).
+      instances: Number(leerEnv(path.join(__dirname, ".env")).PM2_INSTANCIAS || 2),
+      exec_mode: "cluster",
+      // Bajo carga un proceso llega a ~1–1,5 GB (medido con 1.000 usuarios): con 700M PM2 lo reiniciaba en pleno pico.
+      max_memory_restart: "1500M",
+      kill_timeout: 10000,
       time: true,
       env: {
         ...leerEnv(path.join(__dirname, ".env")),

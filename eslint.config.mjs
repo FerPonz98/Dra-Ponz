@@ -44,7 +44,7 @@ const eslintConfig = defineConfig([
     files: ["ecosystem.config.js"],
     rules: { "@typescript-eslint/no-require-imports": "off" },
   },
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "drizzle/**", "test-results/**", "playwright-report/**", "lighthouse/**"]),
+  globalIgnores(["tests/carga/*.js", ".next/**", ".herramientas/**", ".data/**", "out/**", "build/**", "next-env.d.ts", "drizzle/**", "test-results/**", "playwright-report/**", "lighthouse/**"]),
 ]);
 
 export default eslintConfig;

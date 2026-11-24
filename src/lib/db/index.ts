@@ -7,7 +7,8 @@ const g = globalThis as Global;
 
 function crearPool(url: string | undefined, nombre: string) {
   if (!url) throw new Error(`Falta la variable ${nombre}`);
-  return new Pool({ connectionString: url, max: 10, idleTimeoutMillis: 30_000 });
+  // DB_POOL_MAX por proceso (def. 10). Con PM2 en cluster: procesos × 2 pools × DB_POOL_MAX < max_connections.
+  return new Pool({ connectionString: url, max: Number(process.env.DB_POOL_MAX ?? 10), idleTimeoutMillis: 30_000, connectionTimeoutMillis: 10_000 });
 }
 
 /** Pool con el rol de la app (sin BYPASSRLS): toda consulta de negocio pasa por aquí. */

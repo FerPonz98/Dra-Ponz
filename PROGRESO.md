@@ -205,3 +205,31 @@
 | e2e | ✅ 21/21 con `next start` y 21/21 con el servidor standalone (2 omitidos por proyecto a propósito) |
 | Lighthouse móvil | ✅ `/es` 96/100/100/100 · `/pt` 99/100/100/100 |
 | Accesibilidad (axe WCAG 2.1 AA) | ✅ 0 violaciones serias o críticas en panel (claro y oscuro), landing y portal |
+
+## Temas por organización + landing con movimiento ✅
+
+**Hecho**
+- Tabla `organizacion_tema` (migraciones `0008_tema`, `0009_rls_tema` con RLS y CHECK), seed con los colores actuales de la Dra.
+- Configuración → Apariencia: 7 presets, selectores de color (color + HEX), 4 fuentes serif + 4 sans (`next/font`),
+  bordes recto/suave/redondeado, vista previa en vivo (landing + tarjeta del portal), contraste AA con sugerencias,
+  Guardar / Descartar cambios / Restaurar valores por defecto.
+- Variables CSS generadas en el servidor e inyectadas en el `<head>` de la landing y el portal (y el primario en el panel),
+  cache por organización invalidada al guardar. La landing y la imagen OG ya no tienen colores fijos.
+- Landing con movimiento (Motion + CSS): ver la guía en `DISENO.md`. Videos y capturas en `revisiones/animaciones/`.
+
+**Revisión**
+| Paso | Resultado |
+|---|---|
+| typecheck | ✅ 0 errores |
+| lint | ✅ 0 errores, 0 avisos |
+| build | ✅ |
+| test | ✅ 63/63 (9 nuevas de temas: presets AA, variantes, rechazo de contraste, CSS, guardado y RLS A/B) |
+| e2e | ✅ 26/26 (2 omitidos por proyecto a propósito); 4 nuevas en `fase7-tema.spec.ts` |
+| Lighthouse móvil | ✅ `/es` 99/100/100/100 · `/pt` 98/100/100/100 |
+| Accesibilidad (axe WCAG 2.1 AA) | ✅ 0 violaciones serias o críticas (incluye Apariencia en claro y oscuro) |
+
+## Auditoría de seguridad y carga ✅
+
+Ver `SEGURIDAD_Y_CARGA.md`: 1 hallazgo alto y 13 medios corregidos y con tests; landing, portal y panel cumplen las metas
+de carga (Nginx + PM2 en cluster); job de mora de 48 s a 5 s con 50.000 cuotas. Revisión: typecheck, lint, build, 82/82
+tests, 44/44 e2e, npm audit 0.
