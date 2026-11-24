@@ -482,7 +482,9 @@ Arriba aparece la confirmación (1) y abajo, la lista de **revisados recientemen
 
 ### Eliminar un comprobante {#eliminar-comprobante}
 
-Haz clic en el **ícono de basurero** del comprobante y confirma con **Sí, eliminar**. Lo encuentras en **Comprobantes** (en cada tarjeta por aprobar y en **Revisados recientemente**) y en la ficha del plan, tarjeta **Pagos**.
+Haz clic en el **ícono de basurero**, junto al estado del comprobante (1), y confirma con **Sí, eliminar**. Lo encuentras en **Comprobantes** (en cada tarjeta por aprobar y en **Revisados recientemente**) y en la ficha del plan, tarjeta **Pagos**.
+
+![Eliminar un comprobante](img/eliminar-comprobante.png)
 
 - Si estaba **por aprobar** o **rechazado**, solo se borra el comprobante y su archivo; el estudiante puede subir otro.
 - Si estaba **aprobado**, la cuota **vuelve a quedar pendiente** de pago y se recalcula la mora.

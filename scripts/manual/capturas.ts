@@ -521,6 +521,10 @@ async function recorrido() {
       { loc: dra.getByText("Pago aprobado.", { exact: true }), n: 1 },
       { loc: tarjeta(dra, "Revisados recientemente"), n: 2, margen: 2 },
     ], { sinScroll: true });
+    // Ícono de basurero para eliminar un comprobante (solo se señala; no se borra nada).
+    await captura(dra, "eliminar-comprobante", [
+      { loc: tarjeta(dra, "Revisados recientemente").locator("li span.shrink-0").first(), n: 1 },
+    ], { recorte: tarjeta(dra, "Revisados recientemente") });
     // El estudiante ve el pago aprobado y su próxima cuota
     await sofia.reload();
     await captura(sofia, "est-proxima-cuota", [{ loc: sofia.getByText("Tu próxima cuota", { exact: true }), n: 1 }, { loc: sofia.getByTestId("monto-bs"), n: 2 }], { sinScroll: false });
