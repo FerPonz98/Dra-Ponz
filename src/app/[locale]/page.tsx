@@ -4,10 +4,11 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { withOrg } from "@/lib/db";
+import { EstiloTema } from "@/components/tema/estilo-tema";
+import { TEMA_POR_DEFECTO } from "@/core/tema/tema";
 import { esIdioma, IDIOMAS } from "@/lib/i18n/idiomas";
 import { Landing } from "@/modules/tesis/componentes/landing";
-import { contenidoLanding, organizacionDeLanding } from "@/modules/tesis/servicios/landing";
+import { datosLanding, organizacionDeLandingCacheada } from "@/modules/tesis/servicios/landing-cache";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -16,10 +17,10 @@ const FOTO = "/landing/foto-dra.webp";
 
 async function datos(locale: string) {
   if (!esIdioma(locale)) notFound();
-  const org = await organizacionDeLanding((await headers()).get("host"));
+  const org = await organizacionDeLandingCacheada((await headers()).get("host"));
   if (!org) notFound();
-  const c = await withOrg(org.id, (tx) => contenidoLanding(tx, locale));
-  return { org, c, locale };
+  const { contenido: c, tema, marca } = await datosLanding(org.id, locale);
+  return { org, c, tema: tema ?? TEMA_POR_DEFECTO, marca, locale };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -49,7 +50,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function LandingPage({ params }: Props) {
   const { locale } = await params;
-  const { org, c } = await datos(locale);
+  const { org, c, tema, marca } = await datos(locale);
   const t = await getTranslations({ locale, namespace: "landing" });
   const hayFoto = existsSync(join(/*turbopackIgnore: true*/ process.cwd(), "public", FOTO));
   const jsonLd = {
@@ -64,12 +65,20 @@ export default async function LandingPage({ params }: Props) {
   };
   return (
     <>
+      <EstiloTema tema={tema} alcance="landing" id={org.id} />
+      {/* Transición suave al cambiar ES ↔ PT (View Transitions entre documentos; sin JS). */}
+      <style href="landing-transicion" precedence="tema">
+        {"@media (prefers-reduced-motion: no-preference){@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation-duration:.35s}}"}
+      </style>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <Landing
         c={c}
         idioma={locale as "es" | "pt"}
         whatsapp={org.whatsapp ?? process.env.WHATSAPP_LANDING ?? ""}
         fotoUrl={hayFoto ? FOTO : null}
+        tema={tema}
+        org={marca}
+        nonce={(await headers()).get("x-nonce") ?? ""}
         t={{
           cta: t("cta"),
           ctaCorto: t("ctaCorto"),
@@ -93,6 +102,11 @@ export default async function LandingPage({ params }: Props) {
           respuestaRapida: t("respuestaRapida"),
           niveles: t("niveles"),
           pie: t("pie"),
+          anterior: t("anterior"),
+          siguiente: t("siguiente"),
+          testimonio: t("testimonio"),
+          de: t("de"),
+          saltarIntro: t("saltarIntro"),
         }}
       />
     </>
